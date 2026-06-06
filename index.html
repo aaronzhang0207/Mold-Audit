@@ -92,12 +92,9 @@
                 </span>
                 <span class="text-[10px] md:text-xs text-slate-400">数字化防霉稽核工作台 (Trilingual Digital Audit Platform)</span>
             </div>
-            <div class="flex items-center space-x-3">
-                <button onclick="exportAuditReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition shadow flex items-center gap-1">
-                    💾 导出报告 Export
-                </button>
-                <button onclick="triggerPrint()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow">
-                    🖨️ 打印全部 Print All
+            <div class="flex items-center">
+                <button onclick="triggerPrint()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
+                    🖨️ 打印全部 Print All / បោះពុម្ព
                 </button>
             </div>
         </div>
@@ -106,33 +103,59 @@
     <main class="container mx-auto px-4 py-6 no-print">
         
         <!-- Header Section -->
-        <header class="mb-8 text-center bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <header class="mb-6 text-center bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-1">EVK Mold Audit</h1>
             <p class="text-sm text-slate-500 max-w-2xl mx-auto italic mb-3">
                 三语数字防霉稽核系统 | Trilingual Mold Prevention Audit Standard (CN / EN / KH)
             </p>
             <div class="text-xs text-slate-400 font-medium border-t border-dashed border-slate-200 pt-2 inline-block px-4">
-                📋 支持实地拍照取证 (Camera & Photo Upload Enabled) | 符合国际品控与 Pivot88 稽核规范
+                📋 支持实地拍照 | 包含判定细则 collapsible panels
             </div>
         </header>
+
+        <!-- 5. 稽核基本信息（稽核细则表单） -->
+        <section class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm mb-6">
+            <h3 class="text-xs font-bold text-slate-800 mb-4 flex items-center gap-1.5 border-b border-slate-100 pb-2">
+                📝 稽核基本信息 / Audit Details / ព័ត៌មានលម្អិតអំពីការវាយតម្លៃ
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">📅 稽核时间 / Audit Date / កាលបរិច្ឆេទ:</label>
+                    <input type="date" id="audit-date-input" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">👤 稽核员 / Auditor / អ្នកវាយតម្លៃ:</label>
+                    <input type="text" id="auditor-name-input" placeholder="输入姓名 Enter Auditor Name" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">📈 上次稽核得分 / Last Audit Score / ពិន្ទុលើកមុន (%):</label>
+                    <input type="text" id="last-score-input" placeholder="例如 e.g. 85.5%" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                </div>
+            </div>
+        </section>
 
         <!-- Dashboard Statistics Section -->
         <section id="dashboard" class="mb-10">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 <!-- Compliance Score Ring Chart -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between relative">
                     <div>
                         <h2 class="text-base font-bold text-slate-800 flex justify-between items-center">
-                            <span>📊 稽核得分统计 (Audit Score Summary)</span>
-                            <span id="overall-score-display" class="text-blue-600 text-lg font-extrabold">0 / 0 分</span>
+                            <span>📊 总体合规率 (Compliance Score)</span>
+                            <span id="overall-score-display" class="text-blue-600 text-lg font-extrabold">0.0%</span>
                         </h2>
                         <p class="text-[11px] text-slate-400 mb-4 mt-1">
-                            得分等于判定为合格（PASS）的项目总数量。សរុបពិន្ទុផ្អែកលើការវាយតម្លៃវិជ្ជមាន។
+                            百分比代表合格率（PASS/总评估数，不含N/A）。ពិន្ទុគិតជាភាគរយ។
                         </p>
                     </div>
-                    <div class="chart-container">
+                    <div class="chart-container relative">
                         <canvas id="mainChart"></canvas>
+                        <!-- Center text overlay -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style="top: 25px;">
+                            <span id="center-percent-text" class="text-2xl font-extrabold text-slate-800">0.0%</span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">合规 Compliance</span>
+                        </div>
                     </div>
                 </div>
 
@@ -140,10 +163,10 @@
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-800">
-                            🏢 各区域得分对比 (Section Score Comparison)
+                            🏢 各区域合规对比 (Section Performance %)
                         </h2>
                         <p class="text-[11px] text-slate-400 mb-4 mt-1">
-                            对比三大核心物理区域的得分。ប្រៀបធៀបពិន្ទុតាមផ្នែកនីមួយៗ។
+                            三大物理区域的合格率百分比对比。ការប្រៀបធៀបភាគរយតាមតំបន់។
                         </p>
                     </div>
                     <div class="chart-container">
@@ -162,7 +185,7 @@
 
         <!-- Audit Interaction Area -->
         <section id="audit-area" class="mb-12">
-            <!-- Tab selector -->
+            <!-- Tab selector (Requirements 6: Trilingual Titles) -->
             <div class="mb-6 flex overflow-x-auto pb-2 space-x-2 no-scrollbar" id="tab-navigation">
                 <!-- Dynamic Tabs injected by JS -->
             </div>
@@ -182,13 +205,17 @@
 
     <!-- PRINT-ONLY LAYOUT (Generates a beautifully structured table of ALL items in all sections) -->
     <div id="print-layout" class="hidden print-only p-8 max-w-[1000px] mx-auto">
-        <div class="text-center mb-8 border-b-2 border-slate-900 pb-4">
+        <div class="text-center mb-6 border-b-2 border-slate-900 pb-4">
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-wider">EVK MOLD AUDIT REPORT</h1>
             <p class="text-xs text-slate-500 mt-1 uppercase tracking-widest">防霉数字化稽核报告</p>
-            <div class="flex justify-between text-[11px] mt-4 font-semibold text-slate-700">
-                <span>📅 稽核日期 Date: <span id="print-date">--</span></span>
-                <span>📋 总得分 Score: <span id="print-score">0 / 0</span></span>
-            </div>
+        </div>
+
+        <!-- 5. 打印视图抬头稽核细则 -->
+        <div class="grid grid-cols-2 gap-4 border border-slate-300 p-4 mb-6 text-xs bg-slate-50/50 rounded-xl">
+            <div>👤 <strong>稽核员 Auditor:</strong> <span id="print-auditor">--</span></div>
+            <div>📅 <strong>稽核日期 Date:</strong> <span id="print-date">--</span></div>
+            <div>📈 <strong>上次得分 Last Score:</strong> <span id="print-last-score">--</span></div>
+            <div>📊 <strong>本次合规率 Current Score:</strong> <span id="print-score">0.0%</span></div>
         </div>
 
         <!-- Print sections injected dynamic here -->
@@ -222,49 +249,559 @@
     </footer>
 
     <script>
-        // Restructured Dataset to 3 Major Sections (General, Warehouse, Production)
+        // Expanded Dataset to 3 Major Sections with collapsible "Fully Meet" and "Do Not Meet" (Trilingual!)
         const auditData = {
             sections: [
                 {
                     id: "general",
-                    title_cn: "1. 常规检查",
+                    title_cn: "常规检查",
                     title_en: "General Checks",
                     title_kh: "ការត្រួតពិនិត្យទូទៅ",
-                    intro: "【常规防霉重点】全厂基础卫生、温湿度监控（RH < 60%）、以及防霉基础培训。\n【ការគ្រប់គ្រងទូទៅ】អនាម័យមូលដ្ឋានក្នុងរោងចក្រ ការត្រួតពិនិត្យសំណើម និងការបណ្តុះបណ្តាលបុគ្គលិក។",
+                    intro: "【常规防霉重点】全厂基础卫生、每日防霉除湿计划、饮食禁令、温湿度监控（RH < 60%）以及防霉专项培训。\n【ការគ្រប់គ្រងទូទៅ】អនាម័យមូលដ្ឋានក្នុងរោងចក្រ ផែនការកំចាត់សំណើមប្រចាំថ្ងៃ ការហាមឃាត់ការហូបចុក ការវាស់សំណើម និងការបណ្តុះបណ្តាលបុគ្គលិក។",
                     items: [
-                        { id: "1.1", en: "Are walls, floors, ceilings, and windows dry and free from any leaks, water seepage, or visible mold?", cn: "墙壁、地面、天花板和窗户是否干燥，无任何漏水、渗水或肉眼可见霉变？", kh: "តើជញ្ជាំង ឥដ្ឋ ពិដាន និងបង្អួចស្ងួតល្អ គ្មានការលេចធ្លាយទឹក ការជ្រាបទឹក ឬកើតផ្សិតដែលមើលឃើញនឹងភ្នែក?", status: 'P', photo: null, comments: "" },
-                        { id: "1.2", en: "Is a comprehensive daily hygiene program in place and executed across all factory areas?", cn: "工厂各区域是否建立并严格执行全面的每日卫生清洁与除潮计划？", kh: "តើមានកម្មវិធីអនាម័យប្រចាំថ្ងៃដ៏ទូលំទូលាយ និងត្រូវបានអនុវត្តនៅគ្រប់តំបន់រោងចក្រដែរឬទេ?", status: 'P', photo: null, comments: "" },
-                        { id: "1.3", en: "Are temperature and relative humidity (RH) monitored and recorded daily across key processing areas?", cn: "各关键车间区域的温度和相对湿度（RH）是否每天定时监控、记录并保持达标？", kh: "តើសីតុណ្ហភាព និងសំណើមធៀប (RH) ត្រូវបានត្រួតពិនិត្យ និងកត់ត្រាប្រចាំថ្ងៃនៅតាមតំបន់សំខាន់ៗ?", status: 'P', photo: null, comments: "" },
-                        { id: "1.4", en: "Are food, beverages, and organic waste strictly prohibited in any production and storage areas?", cn: "生产和储存区域内是否严格禁止携带和丢弃食物、饮料及有机垃圾，防范生物源污染？", kh: "តើមានការហាមឃាត់ដាច់ខាតមិនឱ្យយកអាហារ ភេសជ្ជៈ ឬកាកសំណល់សរីរាង្គចូលក្នុងបន្ទប់ផលិត និងឃ្លាំង?", status: 'P', photo: null, comments: "" },
-                        { id: "1.5", en: "Are employees trained regularly on mold prevention procedures, standard protocols, and awareness?", cn: "相关岗位员工是否定期接受过标准的防霉作业、应急处置和规范培训？", kh: "តើបុគ្គលិកទទួលបានការបណ្តុះបណ្តាលជាទៀងទាត់អំពីនីតិវិធីការពារផ្សិត និងការយល់ដឹងផ្សេងៗ?", status: 'P', photo: null, comments: "" }
+                        { 
+                            id: "1.1", 
+                            en: "Are walls, floors, ceilings, and windows dry and free from any leaks, water seepage, or visible mold?", 
+                            cn: "墙壁、地面、天花板和窗户是否干燥，无任何漏水、渗水或肉眼可见霉变？", 
+                            kh: "តើជញ្ជាំង ឥដ្ឋ ពិដាន និងបង្អួចស្ងួតល្អ គ្មានការលេចធ្លាយទឹក ការជ្រាបទឹក ឬកើតផ្សិតដែលមើលឃើញនឹងភ្នែក?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 建筑物内外部无渗漏、积水或水损迹象。\n2) 地板、屋顶、墙壁等清洁干燥，无可见潮气、起霜或霉菌。",
+                            fully_en: "1) Building (inside/out) free of leaks, pooling or water damage.\n2) Floors, roof, walls are dry, clean, without visible dampness, blooming or mold.",
+                            fully_kh: "១) គ្មានការលេចធ្លាយទឹក ជ្រាបទឹក ឬដក់ទឹកនៅក្នុងនិងក្រៅអគារ។\n២) កម្រាលឥដ្ឋ ពិដាន ជញ្ជាំងស្អាត ស្ងួត គ្មានសំណើម ឬដុះផ្សិតឡើយ។",
+                            not_cn: "1) 建筑存在漏水、积水、局部或大面积受潮。\n2) 地面或墙壁有肉眼可见霉斑、发黑或起霜。",
+                            not_en: "1) Building has active leaks, water pooling, or dampness.\n2) Floors or walls show visible mold, black spots, or blooming.",
+                            not_kh: "១) មានការលេចធ្លាយទឹក ការដក់ទឹក ឬសើម។\n២) កម្រាលឥដ្ឋ ឬជញ្ជាំងមានដុះផ្សិត ស្នាមខ្មៅ ឬស្នាមអំបិល។"
+                        },
+                        { 
+                            id: "1.2", 
+                            en: "Is a comprehensive daily hygiene program in place with data recording across all factory areas?", 
+                            cn: "是否建立并严格执行每天的卫生清洁与防霉检查计划，并留有完整记录？", 
+                            kh: "តើមានកម្មវិធីអនាម័យប្រចាំថ្ងៃ និងការកត់ត្រាទិន្នន័យត្រឹមត្រូវនៅគ្រប់តំបន់រោងចក្រដែរឬទេ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 拥有明确的每日环境清洁计划，责任落实到具体员工。\n2) 包含除尘与死角消毒计划，并留存每日核对表记录备查。",
+                            fully_en: "1) Clear daily cleaning schedule assigned to specific staff.\n2) Focuses on dust removal, dead angle sanitization, with signed checklists on file.",
+                            fully_kh: "១) មានផែនការអនាម័យប្រចាំថ្ងៃច្បាស់លាស់ដល់បុគ្គលិកជាក់លាក់។\n២) ផ្តោតលើការលុបធូលី សម្លាប់មេរោគតាមកន្លែងចង្អៀត ដោយមានតារាងកំណត់ត្រា។",
+                            not_cn: "1) 未建立每日清洁计划，或执行流于形式。\n2) 厂房角落、风机处存在严重积尘或垃圾堆积，无清洁记录。",
+                            not_en: "1) No daily schedule exists, or execution is irregular.\n2) Dust/rubbish accumulated in corners, vents, with no logs.",
+                            not_kh: "១) គ្មានផែនការអនាម័យប្រចាំថ្ងៃ ឬការអនុវត្តមិនទៀងទាត់។\n២) មានធូលី និងកាកសំណល់គរទុកតាមជ្រុង ឬប្រព័ន្ធខ្យល់ ដោយគ្មានកំណត់ត្រា។"
+                        },
+                        { 
+                            id: "1.3", 
+                            en: "Are food, beverages, and organic waste strictly prohibited in production and storage areas?", 
+                            cn: "生产和储存区域内是否严格禁止携带和丢弃食物、饮料及有机垃圾？", 
+                            kh: "តើមានការហាមឃាត់ដាច់ខាតមិនឱ្យយកអាហារ ភេសជ្ជៈ ឬកាកសំណល់សរីរាង្គចូលក្នុងបន្ទប់ផលិត និងឃ្លាំង?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 划定专门的员工饮水与进餐区，生产现场禁止饮食。\n2) 现场张贴醒目的禁食警示牌，无外露垃圾桶堆放食物残渣。",
+                            fully_en: "1) Defined drinking and eating areas with clear markings, no food/drink on line.\n2) Visible warning signs posted, no open trash bins with organic waste.",
+                            fully_kh: "១) កំណត់កន្លែងញ៉ាំទឹក និងអាហារច្បាស់លាស់ ហាមឃាត់ដាច់ខាតនៅលើខ្សែសង្វាក់។\n២) មានបិទផ្លាកសញ្ញាហាមឃាត់ គ្មានធុងសំរាមចំហរដាក់សំណល់អាហារ។",
+                            not_cn: "1) 允许员工在工位吃饭、饮用带糖饮料，在制品旁有食物残留。\n2) 现场积压易腐烂有机垃圾未及时清运。",
+                            not_en: "1) Workers eat/drink at workstation; food residues near products.\n2) Organic waste is left in workshops without timely disposal.",
+                            not_kh: "១) កម្មករហូបចុកនៅកន្លែងធ្វើការ មានសំណល់អាហារនៅក្បែរទំនិញ។\n២) កាកសំណល់សរីរាង្គត្រូវបានទុកចោលក្នុងរោងចក្រដោយមិនបានប្រមូលចេញ។"
+                        },
+                        { 
+                            id: "1.4", 
+                            en: "Is hand sanitizer dispenser available to workers with SOP explaining how and why to use it?", 
+                            cn: "是否为员工提供洗手液分配器，并附有使用说明或标准操作程序（SOP）？", 
+                            kh: "មានឧបករណ៍ចែកចាយទឹកអនាម័យដល់កម្មករ (ដោយមាន SOP ហេតុអ្វី / របៀបប្រើប្រាស់)?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 洗手池旁或车间入口配备足量且功能正常的免洗消毒液。\n2) 墙面张贴图文并茂的中英柬三语洗手与防霉规范（SOP）。",
+                            fully_en: "1) Sufficient hand sanitizers provided near sinks/entrances.\n2) Visual poster of trilingual SOP (CN/EN/KH) for hand disinfection posted.",
+                            fully_kh: "១) មានទឹកលាងដៃសម្លាប់មេរោគគ្រប់គ្រាន់នៅក្បែរកន្លែងលាងដៃ/ច្រកចូល។\n២) មានបិទបង្ហាញ SOP ជារូបភាពជាបីភាសា (ចិន/អង់គ្លេស/ខ្មែរ)។",
+                            not_cn: "1) 无洗手液，或分配器空置、损坏。\n2) 无防霉消毒教育，员工不知道接触高风险材料前需要洗手。",
+                            not_en: "1) No hand sanitizer, or dispensers are empty/broken.\n2) No SOP or education on hand sanitizing before handling materials.",
+                            not_kh: "១) គ្មានទឹកលាងដៃ ឬម៉ាស៊ីនចែកចាយទទេ/ខូច។\n២) គ្មាន SOP ឬការអប់រំអំពីការលាងសម្អាតដៃមុនពេលប៉ះពាល់វត្ថុធាតុដើម។"
+                        },
+                        { 
+                            id: "1.5", 
+                            en: "Are employees trained regularly on mold prevention procedures, standards, and awareness?", 
+                            cn: "相关岗位员工是否定期接受过标准的防霉作业、应急处置和规范培训？", 
+                            kh: "តើបុគ្គលិកទទួលបានការបណ្តុះបណ្តាលជាទៀងទាត់អំពីនីតិវិធីការពារផ្សិត និងការយល់ដឹងផ្សេងៗ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 每年/每季开展针对各车间（仓储、车缝、包装）的防霉专项培训。\n2) 保留签到表、课件及培训照片等证明材料。",
+                            fully_en: "1) Mold prevention training is held annually/quarterly for all sections.\n2) Training records, including signature lists, slides, and photos, are kept.",
+                            fully_kh: "១) ការបណ្តុះបណ្តាលការពារផ្សិតត្រូវបានធ្វើឡើងប្រចាំឆ្នាំ/ត្រីមាសសម្រាប់គ្រប់ផ្នែក។\n២) មានរក្សាទុកកំណត់ត្រាបណ្តុះបណ្តាល បញ្ជីវត្តមាន និងរូបថត។",
+                            not_cn: "1) 员工对现场防霉标准（如温湿度界限）不了解、未听过该标准。\n2) 厂方无法提供任何培训记录证据材料。",
+                            not_en: "1) Workers are unaware of basic mold criteria or limits.\n2) Factory cannot provide any valid training logs or records.",
+                            not_kh: "១) បុគ្គលិកមិនបានដឹងពីដែនកំណត់ ឬស្តង់ដារការពារផ្សិត។\n២) រោងចក្រមិនអាចផ្តល់ឯកសារឬកំណត់ត្រាបណ្តុះបណ្តាលបានឡើយ។"
+                        },
+                        { 
+                            id: "1.6", 
+                            en: "Are temperature and relative humidity (RH) monitored and recorded daily, maintaining RH below 60%?", 
+                            cn: "关键加工和储存区域的温度和相对湿度是否每天定时监控、记录并保持达标（RH < 60%）？", 
+                            kh: "តើសីតុណ្ហភាព និងសំណើមធៀប (RH) ត្រូវបានត្រួតពិនិត្យ និងកត់ត្រាប្រចាំថ្ងៃដោយរក្សា RH < ៦០%?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 每日在上午、下午等多个时间点测试并记录关键温湿度数据。\n2) 仓库和包装车间湿度始终控制在 60% 以下，并有异常响应机制。",
+                            fully_en: "1) Multi-point daily logs (AM/PM) recorded for key areas.\n2) RH consistently maintained below 60% with documented actions for issues.",
+                            fully_kh: "១) កត់ត្រាទិន្នន័យសីតុណ្ហភាពនិងសំណើមប្រចាំថ្ងៃ (ព្រឹក/ល្ងាច) នៅតាមកន្លែងសំខាន់ៗ។\n២) សំណើមធៀប (RH) ស្ថិតនៅក្រោម ៦០% ជាប្រចាំ ដោយមានវិធានការដោះស្រាយ។",
+                            not_cn: "1) 未进行监控、无记录表，或记录表存在明显“人工补填”造假迹象。\n2) 空气潮湿时湿度长时间超过 60% 且无任何降湿应对措施。",
+                            not_en: "1) No records, or logs show signs of fabrication/pre-filling.\n2) RH exceeds 60% for long periods with no dehumidification actions.",
+                            not_kh: "១) គ្មានការត្រួតពិនិត្យ គ្មានកំណត់ត្រា ឬកំណត់ត្រាមានសញ្ញាក្លែងបន្លំ។\n២) សំណើមធៀបលើសពី ៦០% រយៈពេលយូរដោយគ្មានការដោះស្រាយ។"
+                        },
+                        { 
+                            id: "1.7", 
+                            en: "Are all temperature/humidity meters and moisture readers regularly calibrated with calibration labels?", 
+                            cn: "所有温湿度测量仪器和快速水分测试仪是否定期校准，并贴有校准标签？", 
+                            kh: "តើឧបករណ៍វាស់កំរិតសំណើម និងឧបករណ៍វាស់សីតុណ្ហភាព/សំណើមទាំងអស់ត្រូវបានក្រិតតាមខ្នាតជាប្រចាំ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 所有湿度计、含水率仪定期送往第三方机构校准，或内部按标准液/标准块校验。\n2) 仪器机身贴有清晰、有效的绿色合格/校准标签。",
+                            fully_en: "1) All hygrometers and moisture meters calibrated externally/internally.\n2) Equipment labeled with valid calibration stickers indicating due dates.",
+                            fully_kh: "១) ឧបករណ៍វាស់សំណើមទាំងអស់ត្រូវបានក្រិតតាមខ្នាតជាទៀងទាត់។\n២) មានបិទផ្លាកសញ្ញាបញ្ជាក់ការក្រិតតាមខ្នាតត្រឹមត្រូវជាមួយនឹងកាលបរិច្ឆេទ។",
+                            not_cn: "1) 设备老化、读数异常，无法提供有效校准报告。\n2) 仪器未贴标签或标签已过期数月。",
+                            not_en: "1) Equipment is faulty/uncalibrated with no verification certificate.\n2) Instruments lack labels, or calibration status has expired.",
+                            not_kh: "១) ឧបករណ៍ខូចខាត ឬមិនបានក្រិតតាមខ្នាត ដោយគ្មានវិញ្ញាបនបត្រ។\n២) ឧបករណ៍គ្មានផ្លាកសញ្ញា ឬហួសសុពលភាពកំណត់។"
+                        },
+                        { 
+                            id: "1.8", 
+                            en: "Are regular pest control and environmental mold sanitization treatments scheduled and documented?", 
+                            cn: "厂区内是否定期实施防虫、防鼠以及厂区环境防霉消毒，并记录存档？", 
+                            kh: "តើមានការអនុវត្តគ្រប់គ្រងសត្វល្អិត និងការបាញ់ថ្នាំសម្លាប់មេរោគ/ផ្សិតក្នុងរោងចក្រជាប្រចាំដែរឬទេ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 与专业虫害消杀及防霉服务商签约，定期对厂区全覆盖喷洒消杀。\n2) 厂区各死角有鼠饵站布局图，消杀报告完备并存档。",
+                            fully_en: "1) Contracted professional services for regular pest control and disinfection.\n2) Bait stations mapped correctly, with complete vendor reports filed.",
+                            fully_kh: "១) មានកិច្ចសន្យាជាមួយក្រុមហ៊ុនវិជ្ជាជីវៈដើម្បីកំចាត់សត្វល្អិត និងសម្លាប់មេរោគ។\n២) មានប្លង់ដាក់ប្រអប់នុយសត្វកណ្តុរ និងមានរបាយការណ៍ច្បាស់លាស់។",
+                            not_cn: "1) 现场发现大批死昆虫、鼠粪或蛛网，无任何消杀计划。\n2) 无法提供杀虫/防霉服务报告记录。",
+                            not_en: "1) Insects, droppings, or thick webs found on site; no control plan.\n2) Missing service agreements, logs, or pesticide chemical list.",
+                            not_kh: "១) ឃើញមានសត្វល្អិត លាមកសត្វ ឬស្បៃមងលើយន្តហោះ ដោយគ្មានផែនការកំចាត់។\n២) គ្មានរបាយការណ៍សេវាកម្ម ឬកំណត់ត្រាកំចាត់សត្វល្អិត។"
+                        },
+                        { 
+                            id: "1.9", 
+                            en: "Are all trash bins covered, and is production waste cleared daily without accumulation in workshops?", 
+                            cn: "垃圾桶是否带盖，垃圾是否每天清理，不堆积在车间内？", 
+                            kh: "តើធុងសំរាមមានគម្របបិទជិត និងត្រូវបានសំអាតចេញជារៀងរាល់ថ្ងៃដើម្បីកុំឱ្យកកស្ទះ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 车间所有垃圾桶配备脚踏式或摇盖式封闭盖子。\n2) 清洁工每天下班前对车间垃圾进行彻底清理出厂，不在车间过夜。",
+                            fully_en: "1) All bins inside workshop are covered with tightly fitted/foot-pedal lids.\n2) Workshop waste cleared fully before the end of each shift, no overnight storage.",
+                            fully_kh: "១) ធុងសំរាមទាំងអស់មានគម្របបិទជិត ឬប្រើជើងជាន់។\n២) សំរាមក្នុងរោងចក្រត្រូវបានសំអាតចេញអស់រៀងរាល់ថ្ងៃ មិនទុកឱ្យឆ្លងយប់។",
+                            not_cn: "1) 垃圾桶敞口，散发异味甚至生虫。\n2) 大量生活或生产废料在车间内堆积数天无人过问。",
+                            not_en: "1) Trash bins left open, creating strong odors or attracting insects.\n2) Bulky garbage pile-up in work areas for several days.",
+                            not_kh: "១) ធុងសំរាមបើកចំហរ បង្កក្លិនស្អុយ ឬទាក់ទាញសត្វល្អិត។\n២) សំណល់អាហារ ឬកាកសំណល់ផលិតកម្មត្រូវបានទុកគរជាច្រើនថ្ងៃ។"
+                        },
+                        { 
+                            id: "1.10", 
+                            en: "Are regular mold prevention walkthrough audits conducted, with corrective action plans recorded?", 
+                            cn: "是否定期进行防霉专项走访稽核（Walkthrough Audit）并及时整改异常？", 
+                            kh: "តើមានការដើរត្រួតពិនិត្យផ្សិតជាប្រចាំ និងមានកំណត់ត្រាកែតម្រូវចំពោះចំណុចមិនអនុលោមភាព?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 品质或厂长每月带队进行防霉隐患排查（包括死角、管网、屋顶）。\n2) 针对发现问题，记录不符合项，制定整改（CAPA）方案并跟踪结案。",
+                            fully_en: "1) Quality team/factory head leads monthly walk-through inspections.\n2) Action plans (CAPA) are recorded, assigned, tracked, and closed with photos.",
+                            fully_kh: "១) ក្រុមការងារគុណភាពចុះត្រួតពិនិត្យស្វែងរកហានិភ័យផ្សិតរៀងរាល់ខែ។\n២) រាល់បញ្ហាត្រូវបានកត់ត្រា និងមានវិធានការកែតម្រូវច្បាស់លាស់។",
+                            not_cn: "1) 没有任何内部排查机制，防霉处于盲目状态。\n2) 发现缺陷后口头敷衍，无任何书面跟进及整改反馈方案。",
+                            not_en: "1) No internal audits or checkups performed.\n2) Deficiencies are noted but ignored, with no written corrective action plan.",
+                            not_kh: "១) គ្មានការត្រួតពិនិត្យផ្ទៃក្នុងទាល់តែសោះ។\n២) ឃើញមានបញ្ហាកើតឡើងតែគ្មានកំណត់ត្រា ឬដំណោះស្រាយជាលាយលក្ខណ៍អក្សរ។"
+                        },
+                        { 
+                            id: "1.11", 
+                            en: "Is the general ventilation system (windows, fans, AC) in good working order, free of dust accumulation or water leaks?", 
+                            cn: "全厂通风系统（窗户、排风扇、空调）是否运行良好，无积尘和漏水隐患？", 
+                            kh: "តើប្រព័ន្ធខ្យល់ចេញចូលទូទៅ (បង្អួច កង្ហារ ម៉ាស៊ីនត្រជាក់) ដំណើរការល្អ គ្មានធូលី ឬការលេចធ្លាយទឹក?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 空调滤网、排气扇叶轮定期擦洗无厚重积尘。\n2) 新风系统运行良好，空气流通顺畅，空调制冷无漏水或滴水危险。",
+                            fully_en: "1) Exhaust fans, window vents, AC filters cleaned regularly without dust build-up.\n2) Good airflow, no air blockages, no condensation dripping from AC units.",
+                            fully_kh: "១) កង្ហារស្រូបខ្យល់ បង្អួច ស្រទាប់ម៉ាស៊ីនត្រជាក់ត្រូវបានសម្អាតជាប្រចាំ។\n២) ខ្យល់ចេញចូលល្អ គ្មានការស្ទះ និងគ្មានទឹកស្រក់ពីម៉ាស៊ីនត្រជាក់។",
+                            not_cn: "1) 排风扇因污垢严重卡死或失效，车间闷热潮湿。\n2) 空调风口下方有冷凝水聚积滴落，正对物料区或成品。",
+                            not_en: "1) Fans are non-functional, blocked by grime, causing stale/damp air.\n2) Condensation dripping from ducting directly over materials/cargo areas.",
+                            not_kh: "១) កង្ហារស្រូបខ្យល់ខូច ឬកកស្ទះដោយសារធូលី បង្កឱ្យហប់សំណើម។\n២) មានទឹកកកស្ទះស្រក់ចេញពីម៉ាស៊ីនត្រជាក់ចំពីលើវត្ថុធាតុដើម ឬទំនិញ។"
+                        }
                     ]
                 },
                 {
                     id: "warehouse",
-                    title_cn: "2. 材料仓",
+                    title_cn: "材料仓",
                     title_en: "Warehouse",
                     title_kh: "ឃ្លាំងវត្ថុធាតុដើម",
                     intro: "【材料仓防霉重点】防止原材料及包装吸湿。检查非木质卡板离地离墙堆放，除湿机运转，及先进先出（FIFO）。\n【ឃ្លាំងវត្ថុធាតុដើម】ការពារវត្ថុធាតុដើមពីការបឺតសំណើម ដោយរក្សាទុកលើបន្ទះជ័រ និងដំណើរការម៉ាស៊ីនបឺតសំណើម។",
                     items: [
-                        { id: "2.1", en: "Are all raw materials, trims, and packaging stored on plastic/non-wooden pallets (at least 12cm off floor, 60cm off exterior walls)?", cn: "原材料、辅料及包材是否全部存放在塑料/非木质卡板上（离地≥12cm，离外墙≥60cm，离窗≥100cm）？", kh: "តើសម្ភារៈវត្ថុធាតុដើម គ្រឿងបន្សំ និងការវេចខ្ចប់រក្សាទុកនៅលើបន្ទះក្តារជ័រ (យ៉ាងហោចណាស់ ១២សង់ទីម៉ែត្រពីដី ៦០សង់ទីម៉ែត្រពីជញ្ជាំង)?", status: 'P', photo: null, comments: "" },
-                        { id: "2.2", en: "Are empty cartons, polybags, and wrapping tissues tested for moisture before packing (Carton moisture < 12%)?", cn: "包装前对空纸箱、内胶袋、拷贝纸等辅料进行含水率测试，外箱含水率是否保持在 12% 以下？", kh: "តើធុងកាតុងទទេ ថង់ប្លាស្ទិក និងក្រដាសស្នោ ត្រូវបានវាស់សំណើមមុនពេលវេចខ្ចប់ (កាតុង <១២%)?", status: 'P', photo: null, comments: "" },
-                        { id: "2.3", en: "Are industrial dehumidifiers and ventilation fans functioning and turned on to keep warehouse RH < 60%?", cn: "材料仓配备的除湿机和排风扇是否运行状态良好，并在空气潮湿时及时开启保持湿度 < 60%？", kh: "តើម៉ាស៊ីនស្រូបសំណើមឧស្សាហកម្ម និងកង្ហារបឺតខ្យល់ដំណើរការធម្មតា ដើម្បីរក្សាសំណើមក្នុងឃ្លាំងក្រោម ៦០%?", status: 'P', photo: null, comments: "" },
-                        { id: "2.4", en: "Is First-In, First-Out (FIFO) strictly implemented to prevent raw materials from being stored too long?", cn: "物料发放是否严格执行先进先出（FIFO）管理，避免物料在库中存放时间过长发生霉变？", kh: "តើប្រព័ន្ធគ្រប់គ្រងស្តុក ចេញមុន-ចូលមុន (FIFO) ត្រូវបានអនុវត្តន៍យ៉ាងតឹងរ៉ឹងដើម្បីបង្ការការរក្សាទុកយូរ?", status: 'P', photo: null, comments: "" }
+                        { 
+                            id: "2.1", 
+                            en: "Are all raw materials, packaging, and cartons stored on plastic/non-wooden pallets (at least 12cm off floor, 60cm off exterior walls, 100cm off windows)?", 
+                            cn: "物料、包材及纸箱是否存放在非木质/塑料卡板上（离地≥12cm，离外墙≥60cm，离窗≥100cm）？", 
+                            kh: "តើវត្ថុធាតុដើម ការវេចខ្ចប់ និងកាតុងទាំងអស់រក្សាទុកនៅលើបន្ទះជ័រ (យ៉ាងហោចណាស់ ១២សង់ទីម៉ែត្រពីដី ៦០សង់ទីម៉ែត្រពីជញ្ជាំង និង ១០០សង់ទីម៉ែត្រពីបង្អួច)?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 现场货物离地、离墙及离窗距离测量全部符合标准（≥12cm, ≥60cm, ≥100cm）。\n2) 划定警示标线指示物料码放界限。",
+                            fully_en: "1) Measured distances meet rules: off floor ≥12cm, off wall ≥60cm, off window ≥100cm.\n2) Demarcation lines clearly painted on floor to prevent incorrect positioning.",
+                            fully_kh: "១) រាល់ចម្ងាយត្រូវបានវាស់វែងត្រឹមត្រូវ៖ ពីដី ≥១២សង់ទីម៉ែត្រ ពីជញ្ជាំង ≥៦០សង់ទីម៉ែត្រ ពីបង្អួច ≥១០០សង់ទីម៉ែត្រ។\n២) មានគូសខ្សែបន្ទាត់ព្រំដែនច្បាស់លាស់នៅលើឥដ្ឋ។",
+                            not_cn: "1) 材料、包材堆放直接贴靠外墙，或直接接触潮湿地面。\n2) 纸箱堆放在窗户正下方，暴雨时易被溅湿。",
+                            not_en: "1) Goods stored flush against outer walls or placed directly on floor.\n2) Cardboard cartons placed right under windows, high rain risk.",
+                            not_kh: "១) វត្ថុធាតុដើមរក្សាទុកផ្អែកនឹងជញ្ជាំង ឬដាក់ផ្ទាល់លើឥដ្ឋ។\n២) កាតុងដាក់នៅចំក្រោមបង្អួច ងាយរងទឹកភ្លៀងជះចូល។"
+                        },
+                        { 
+                            id: "2.2", 
+                            en: "Is the use of wooden pallets strictly prohibited in warehouses, using only metal or plastic pallets instead?", 
+                            cn: "材料和包材仓内是否严格禁止使用木质卡板，全部改用金属或塑料卡板，以防真菌滋生？", 
+                            kh: "តើការប្រើប្រាស់បន្ទះក្តារឈើត្រូវបានហាមឃាត់ដាច់ខាតក្នុងឃ្លាំង ដោយជំនួសដោយបន្ទះជ័រ ឬលោហៈ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 仓库中100%无任何木制卡板，全部替换为洁净环保的塑料或金属卡板。\n2) 有破损卡板及时清出更换，避免损坏物料包装。",
+                            fully_en: "1) 100% wood pallet prohibition in effect, replaced completely by plastic/metal.\n2) Damaged pallets cleared immediately to protect material pack integrity.",
+                            fully_kh: "១) ហាមឃាត់ការប្រើប្រាស់បន្ទះក្តារឈើ ១០០% ជំនួសដោយបន្ទះជ័រ ឬលោហៈទាំងស្រុង។\n២) បន្ទះជ័រដែលបាក់បែកត្រូវបានដកចេញដើម្បីការពារការខូចខាត包材។",
+                            not_cn: "1) 混用木制托盘堆放高风险包材，部分托盘有发霉发黑或受潮断裂迹象。\n2) 仓库外围大量废旧木卡板随意堆放，易引入虫害和真菌污染环境。",
+                            not_en: "1) Wood pallets mixed with stock, showing visible rot, dampness or cracks.\n2) Pile of rotting wood pallets stored outside warehouse, high pest risk.",
+                            not_kh: "១) មានការលាយឡំប្រើបន្ទះឈើដែលមានសភាពពុក ឬខ្មៅដុះផ្សិត។\n២) បន្ទះឈើចាស់ៗគរទុកចោលនៅខាងក្រៅឃ្លាំង ងាយបង្កឱ្យមានសត្វល្អិត និងផ្សិត។"
+                        },
+                        { 
+                            id: "2.3", 
+                            en: "Are industrial dehumidifiers active in the warehouse to ensure relative humidity (RH) is consistently kept under 60%?", 
+                            cn: "材料仓内是否配置工业除湿机且运行状态良好，在空气潮湿时及时开启保持湿度 < 60%？", 
+                            kh: "តើឃ្លាំងមានបំពាក់ម៉ាស៊ីនស្រូបសំណើមឧស្សាហកម្មដើម្បីធានាសំណើមធៀប (RH) ស្ថិតនៅក្រោម ៦០% ជាប្រចាំ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 仓内配置与空间匹配的高效工业除湿机（带温湿度数显或自动启停）。\n2) 潮湿多雨季节实现24小时除潮运行，保障仓内空气干燥。",
+                            fully_en: "1) Warehouse is equipped with industrial dehumidifiers matching the capacity.\n2) Operated 24/7 during wet seasons to maintain humidity strictly < 60% RH.",
+                            fully_kh: "១) មានបំពាក់ម៉ាស៊ីនស្រូបសំណើមឧស្សាហកម្មសមស្របទៅនឹងទំហំឃ្លាំង។\n២) ដំណើរការ ២៤ម៉ោងក្នុងរដូវភ្លៀងធ្លាក់ដើម្បីរក្សាសំណើម < ៦០% RH។",
+                            not_cn: "1) 无除湿设备，或设备断电故障数周未修理。\n2) 雨天时大开窗户，使室外潮湿空气涌入，未开机抽湿。",
+                            not_en: "1) Dehumidifiers are absent or broken down with no work orders.\n2) Windows left wide open during heavy rain without active extraction.",
+                            not_kh: "១) គ្មានម៉ាស៊ីនស្រូបសំណើម ឬម៉ាស៊ីនខូចខាតជាច្រើនសប្តាហ៍មិនបានជួសជុល។\n២) បើកបង្អួចចំហរពេលមេឃភ្លៀង បណ្តាលឱ្យសំណើមចូលមកក្នុងឃ្លាំង។"
+                        },
+                        { 
+                            id: "2.4", 
+                            en: "Is the First-In, First-Out (FIFO) inventory system applied consistently to prevent raw materials from aging and absorbing moisture?", 
+                            cn: "物料发放与出库是否严格执行先进先出（FIFO）管理，避免原辅料在库时间过长？", 
+                            kh: "តើប្រព័ន្ធគ្រប់គ្រងស្តុក ចេញមុន-ចូលមុន (FIFO) ត្រូវបានអនុវត្តន៍យ៉ាងតឹងរ៉ឹងដើម្បីបង្ការការរក្សាទុកវត្ថុធាតុដើមយូរ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 库位物料有明显的收发卡、批次标签，并建立先进先出控制程序。\n2) 针对超期存货，有再检验含水率合格后才能发料的流程。",
+                            fully_en: "1) Batch labels and bin cards indicate arrival date to enforce FIFO control.\n2) Standard re-inspection program (moisture check) for long-stored materials.",
+                            fully_kh: "១) មានបិទកាតព័ត៌មាន បង្ហាញកាលបរិច្ឆេទចូលស្តុកដើម្បីអនុវត្ត FIFO។\n២) មានការត្រួតពិនិត្យឡើងវិញ (វាស់សំណើម) សម្រាប់វត្ថុធាតុដើមដែលរក្សាទុកយូរ។",
+                            not_cn: "1) 现场码放混乱，后进物料挡住先进物料，部分物料已在库中吸收潮气变质。\n2) 发料无章法，全凭随意抓取，缺乏批次管理手段。",
+                            not_en: "1) Messy stacking blocks older batches, causing materials to age and absorb moisture.\n2) Picking is chaotic with no batch control or traceability.",
+                            not_kh: "១) ការរៀបចំគរទុកគ្មានសណ្តាប់ធ្នាប់ នាំឱ្យវត្ថុធាតុដើមចាស់ៗនៅខាងក្រោមហប់សំណើម។\n២) ការបញ្ចេញទំនិញគ្មានការគ្រប់គ្រងតាមបាច់ ឬតាមកាលបរិច្ឆេទច្បាស់លាស់។"
+                        },
+                        { 
+                            id: "2.5", 
+                            en: "Is moisture content of incoming raw materials, boxes, and cartons tested and recorded upon receipt (carton moisture < 12%)?", 
+                            cn: "进料时是否使用水分测试仪随机抽检原辅料和包装材料的水分含量并进行记录（纸箱水分需 < 12%）？", 
+                            kh: "តើកម្រិតសំណើមនៃវត្ថុធាតុដើមចូល និងកាតុងត្រូវបានវាស់ស្ទង់ និងកត់ត្រានៅពេលទទួល (សំណើមកាតុង < ១២%)?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) IQC人员手持快速水分测试仪对到厂的纸箱、包材及高危辅料逐批抽查水分。\n2) 纸箱含水率控制在 12% 以下（或品牌规定），合格后放行并做书面登记。",
+                            fully_en: "1) IQC uses handheld moisture meters to test incoming cartons/packaging.\n2) Carton moisture strictly < 12% (or brand standard), documented in incoming log.",
+                            fully_kh: "១) IQC ប្រើឧបករណ៍វាស់សំណើមដើម្បីវាស់កាតុង និងសម្ភារៈវេចខ្ចប់ដែលចូល។\n២) សំណើមកាតុងត្រូវតែ < ១២% (ឬតាមស្តង់ដារប្រេន) និងមានកំណត់ត្រា។",
+                            not_cn: "1) 进料检验无水分仪，靠“手感”判断含水率。\n2) 即使发现材料淋雨发霉受潮，仍无记录、直接放行入库。",
+                            not_en: "1) Incoming inspections lack moisture readers; rely on touch/feel estimation.\n2) Wet/damaged boxes accepted without moisture testing or formal quarantine.",
+                            not_kh: "១) គ្មានឧបករណ៍វាស់សំណើមពេលទទួលទំនិញ ប្រើអារម្មណ៍ប៉ះស្ទាបស្មាន។\n២) ប្រអប់ដែលសើម ឬខូចខាតត្រូវបានទទួលចូលឃ្លាំងដោយគ្មានការវាស់កម្រិតសំណើម។"
+                        },
+                        { 
+                            id: "2.6", 
+                            en: "Are all outer cartons, inner boxes, and wrapping papers inspected to ensure they are dry and show no signs of water damage?", 
+                            cn: "所有外箱、内盒和纸盒在入库前是否经过检查，确保干燥且没有任何受潮或水渍迹象？", 
+                            kh: "តើប្រអប់កាតុងខាងក្រៅ ប្រអប់ខាងក្នុង និងក្រដាសខ្ចប់ទាំងអស់ត្រូវបានពិនិត្យដើម្បីធានាថាគ្មានស្នាមជោកទឹក ឬសើម?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 外包装及内包材表面平整干燥，无变形扭曲，亦无渗水发黑痕迹。\n2) 检查项目覆盖所有表面及接缝处，包装完好率达100%。",
+                            fully_en: "1) All cartons/packaging are dry, rigid, undeformed, with no dark water stains.\n2) Comprehensive checking of surfaces/seams, 100% dry compliance.",
+                            fully_kh: "១) កាតុងខាងក្រៅនិងក្នុងមានសភាពស្ងួត រឹងមាំ មិនវៀចវេរ គ្មានស្នាមប្រឡាក់ទឹក។\n២) ការពិនិត្យផ្ទៃទាំងមូលនិងតាមថ្នេរ កម្រិតអនុលោមភាពស្ងួត ១០០%។",
+                            not_cn: "1) 到港纸箱表面有明显水滴、水渍或软塌变形，直接拆包并流入生产线。\n2) 包材在淋雨堆放后未做干化和隔离，直接被送入车间。",
+                            not_en: "1) Carton boxes arrived soft, collapsed, with visible rain stains/water drops.\n2) Rain-exposed packaging sent directly to production line without drying.",
+                            not_kh: "១) កាតុងមកដល់មានសភាពទន់ ជ្រាបទឹក ឬខូចទ្រង់ទ្រាយ តែនៅតែយកទៅប្រើប្រាស់។\n២) សម្ភារៈវេចខ្ចប់ត្រូវទឹកភ្លៀងមិនបានសម្លាប់មេរោគ/ធ្វើឱ្យស្ងួត យកទៅប្រើភ្លាមៗ។"
+                        },
+                        { 
+                            id: "2.7", 
+                            en: "Are warehouse dehumidifier drainage tubes clear and directed outside, and water collector tanks emptied regularly?", 
+                            cn: "仓库除湿机的排水管道是否畅通并接引至库房外部，且定期清理冷凝水箱？", 
+                            kh: "តើទុយោបង្ហូរទឹករបស់ម៉ាស៊ីនស្រូបសំណើមដំណើរការល្អ បង្ហូរទៅខាងក្រៅ និងបានលាងសម្អាតធុងទឹកជាប្រចាំ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 除湿机排水塑料管固定完好，穿墙引出车间外，不漏水入仓。\n2) 如果无穿墙管，专人定时清理积水桶，避免水满停机或溢出。",
+                            fully_en: "1) Drainage pipes secured tightly, led out through the exterior wall.\n2) If tanks used, dedicated team empties them frequently to prevent auto-stops/overflow.",
+                            fully_kh: "១) ទុយោបង្ហូរទឹកត្រូវបានរៀបចំត្រឹមត្រូវ និងបង្ហូរចេញទៅក្រៅជញ្ជាំងអគារ។\n២) ប្រសិនបើប្រើធុងទឹក មានបុគ្គលិកចាក់ទឹកចេញជាប្រចាំ ដើម្បីបង្ការការ tràn ទឹក។",
+                            not_cn: "1) 除湿机水管损坏、断裂，导致抽出来的水直接流在仓库地板上造成积水二次潮湿。\n2) 水箱蓄满后无报警或无人处理，机器自动关机罢工多日。",
+                            not_en: "1) Broken hose leaks water back onto warehouse floor, compounding humidity.\n2) Collection tanks overflowed or triggered auto-shutoff without action for days.",
+                            not_kh: "១) ទុយោបង្ហូរទឹកធ្លុះធ្លាយ ធ្វើឱ្យទឹកហូរដក់លើឥដ្ឋឃ្លាំង បង្កើតសំណើមកាន់តែខ្លាំង។\n២) ធុងទឹកហៀរ ឬម៉ាស៊ីនបិទអូតូដោយគ្មានបុគ្គលិកទៅចាក់ចេញជាច្រើនថ្ងៃ។"
+                        }
                     ]
                 },
                 {
                     id: "production",
-                    title_cn: "3. 生产线",
+                    title_cn: "生产线",
                     title_en: "Production Line",
                     title_kh: "ខ្សែសង្វាក់ផលិតកម្ម",
                     intro: "【生产线防霉重点】车缝防地接、熨烫干蒸汽彻底抽湿并留足包装冷却时间、工人手部干燥、防霉贴封箱及集装箱彻底检查。\n【ខ្សែសង្វាក់ផលិតកម្ម】ការពារផលិតផលមិនឱ្យប៉ះដី ធានាការអ៊ុតស្ងួតត្រជាក់មុនខ្ចប់ ប្រើស្ទីគ័រការពារផ្សិត និងពិនិត្យកុងតឺន័រ។",
                     items: [
-                        { id: "3.1", en: "Are WIP garments, cut pieces, and semi-finished parts stored off the floor in clean baskets or racks?", cn: "裁片、车缝在制品（WIP）及半成品是否全部存放在离地的干净篮框或架子中，禁止直接接触地面？", kh: "តើផលិតផលកំពុងកែច្នៃ (WIP) បំណែកកាត់ និងពាក់កណ្តាលសម្រេចរក្សាទុកក្នុងកន្ត្រក ឬលើធ្នើរ មិនប៉ះដី?", status: 'P', photo: null, comments: "" },
-                        { id: "3.2", en: "Is dry steam used for pressing, and are vacuum tables fully operational to extract all residual moisture?", cn: "整烫是否使用干燥蒸汽，真空抽湿熨烫台是否完全正常运转，以便及时吸走成衣中积存的水分？", kh: "តើការប្រើប្រាស់ចំហាយទឹកស្ងួតសម្រាប់អ៊ុត និងតុកៅអីបឺតខ្យល់ដំណើរការពេញលេញ ដើម្បីបឺតសំណើមចេញ?", status: 'P', photo: null, comments: "" },
-                        { id: "3.3", en: "Are pressed garments allowed to cool and dry completely (at least 1 to 2 hours) before packing?", cn: "熨烫后的成衣是否留出充足的时间完全冷却和干燥（推荐至少 1 至 2 小时）后方可装袋包装？", kh: "តើខោអាវដែលអ៊ុតរួចត្រូវបានទុកឱ្យត្រជាក់ និងស្ងួតទាំងស្រុង (យ៉ាងហោចណាស់ ១-២ ម៉ោង) មុនពេលវេចខ្ចប់?", status: 'P', photo: null, comments: "" },
-                        { id: "3.4", en: "Are packaging workers restricted from using moisture-retaining cotton gloves, keeping hands dry?", cn: "包装车间工人是否禁止使用吸湿且易生霉的棉质手套，双手需随时保持干燥状态？", kh: "តើកម្មករផ្នែកវេចខ្ចប់ត្រូវបានហាមឃាត់មិនឱ្យប្រើស្រោមដៃកប្បាស (ដែលងាយបឺតសំណើម) និងរក្សាដៃឱ្យស្ងួត?", status: 'P', photo: null, comments: "" },
-                        { id: "3.5", en: "Are anti-mold stickers/silica gel desiccant stored in airtight containers and applied immediately before box sealing?", cn: "防霉贴、防霉片或干燥剂是否保存在绝对密封的桶内，并在完成装箱封箱前的最后一刻迅速投放完毕？", kh: "តើស្ទីគ័រការពារផ្សិត និងកញ្ចប់ស្រូបសំណើម ត្រូវបានរក្សាទុកក្នុងប្រអប់បិទជិត និងប្រើភ្លាមៗមុនពេលបិទកាតុង?", status: 'P', photo: null, comments: "" },
-                        { id: "3.6", en: "Are shipping containers thoroughly inspected for holes, wet floors, leaks, and odors, and hung with container desiccants?", cn: "装货前是否对集装箱进行气密、漏雨、地板干燥度及异味点检，并按品牌要求规范悬挂专用货柜干燥挂袋？", kh: "តើកុងតឺន័រទាំងអស់ត្រូវបានត្រួតពិនិត្យភាពធ្លាយ ឥដ្ឋស្ងួត គ្មានក្លិន និងព្យួរកញ្ចប់ស្រូបសំណើមមុនលើកទំនិញ?", status: 'P', photo: null, comments: "" }
+                        { 
+                            id: "3.1", 
+                            en: "Are cut pieces, work-in-progress (WIP), and semi-finished parts stored off the floor in clean plastic baskets or racks?", 
+                            cn: "裁片、车缝在制品（WIP）及半成品是否全部存放在离地的干净塑料周转箱或货架中，严禁直接接触地面？", 
+                            kh: "តើបំណែកកាត់ ផលិតផលកំពុងកែច្នៃ (WIP) និងពាក់កណ្តាលសម្រេចត្រូវបានរក្សាទុកនៅលើធ្នើរ ឬកន្ត្រក មិនប៉ះដី?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 裁剪裁片、针车鞋面在流转期间全部使用塑料托框、周转篮或周转推车。\n2) 绝对无在制品直接靠置、倒置在水泥地面或尘土较多处的现象。",
+                            fully_en: "1) Stitched uppers and cut parts placed strictly in clean plastic bins/trolleys.\n2) Zero tolerance for WIP directly touching cement floors or dusty pathways.",
+                            fully_kh: "១) បំណែកកាត់ និងស្បែកជើងដែលដេររួច ត្រូវបានដាក់ក្នុងកន្ត្រកជ័រ ឬរទេះរុញស្អាត។\n២) គ្មានដាច់ខាតចំពោះ WIP ដាក់ប៉ះផ្ទាល់នឹងឥដ្ឋស៊ីម៉ង់ត៍ ឬផ្លូវដើរដែលមានធូលី។",
+                            not_cn: "1) 半成品、车缝鞋套在车道两旁席地摆放，沾染地气和污物。\n2) 转弯处有裁片零散掉落在泥水地上无包装防护。",
+                            not_en: "1) Semi-finished bundles piled on floor next to lanes, exposed to damp/grime.\n2) Loose panels dropped onto wet floors without cover or triage.",
+                            not_kh: "១) បាច់ផលិតផលពាក់កណ្តាលសម្រេច ត្រូវបានគរទុកលើឥដ្ឋក្បែរផ្លូវដើរ ងាយរងសំណើម។\n២) បំណែកកាត់ជ្រុះលើឥដ្ឋដែលសើមដោយគ្មានការការពារ ឬខ្ចប់ត្រឹមត្រូវ។"
+                        },
+                        { 
+                            id: "3.2", 
+                            en: "Are cardboard or wooden boxes strictly prohibited on the production floor, with only cleanable plastic containers used?", 
+                            cn: "车间地面上是否禁止堆放任何纸箱或木箱，所有运转容器必须为塑料材质并定期清洗？", 
+                            kh: "តើប្រអប់ក្រដាស ឬប្រអប់ឈើត្រូវបានហាមឃាត់នៅលើឥដ្ឋផលិតកម្ម ដោយប្រើតែប្រអប់ជ័រដែលអាចលាងសម្អាតបាន?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 车床、针车拉线无一次性硬纸箱，全面采用耐磨可水洗塑料框。\n2) 塑料框制订了清洁SOP，定期消毒、擦拭，防积尘与真菌附着。",
+                            fully_en: "1) Disposable cardboard/wooden boxes totally banned from workshop floor.\n2) Plastic bins used for parts are washed/sanitized with logs maintained.",
+                            fully_kh: "១) ប្រអប់កាតុង ឬប្រអប់ឈើប្រើម្តងរួចចោល ត្រូវបានហាមឃាត់នៅលើឥដ្ឋផលិតកម្ម។\n២) ប្រអប់ជ័រដែលប្រើត្រូវបានលាងសម្អាត និងសម្លាប់មេរោគជាប្រចាំ។",
+                            not_cn: "1) 车间地下摆放许多破烂纸箱作为收纳，受潮发霉也未予清出。\n2) 容器表面污迹斑斑、沾满黏胶或润滑油污却不洗，污染转入物料。",
+                            not_en: "1) Scrapped/dirty cardboard boxes used for storage, showing visible mold/dust.\n2) Stacking containers coated in old grease or glue residues, transfer risk.",
+                            not_kh: "១) ប្រអប់កាតុងចាស់ៗ និងកខ្វក់ត្រូវបានយកមកដាក់អីវ៉ាន់ ដុះផ្សិតមិនបានដកចេញ។\n២) ប្រអប់ជ័រប្រឡាក់ខ្លាញ់ ប្រេង ឬកាវចាស់ៗ ដែលអាចផ្ទេរមេរោគទៅផលិតផល។"
+                        },
+                        { 
+                            id: "3.3", 
+                            en: "Are sewing machines, cutting equipment, and steam pipes inspected regularly to prevent oil leaks or condensation drips?", 
+                            cn: "所有针车、裁剪机和蒸汽管路是否定期点检，严禁漏机油、漏水或冷凝水滴落在材料及鞋面上？", 
+                            kh: "តើម៉ាស៊ីនដេរ ម៉ាស៊ីនកាត់ និងទុយោចំហាយទឹកត្រូវបានពិនិត្យជាប្រចាំដើម្បីការពារការលេចធ្លាយប្រេង ឬទឹកស្រក់?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 针车底盘密封良好、垫有吸油纸，蒸汽发生器及输送管保温包扎无冷凝水。\n2) 机修每日点检漏油漏水并由车间主管复核记录。",
+                            fully_en: "1) Sewing machines sealed/padded properly with oil-absorbing sheets.\n2) Pipes insulated to avoid condensate drips; daily maintenance logs signed.",
+                            fully_kh: "១) ម៉ាស៊ីនដេរមានទ្រាប់ក្រដាសបឺតប្រេង ទុយោចំហាយទឹកមានរុំស្កុតការពារសំណើម។\n២) បុគ្គលិកបច្ចេកទេសពិនិត្យប្រចាំថ្ងៃលើការលេចធ្លាយប្រេង និងទឹក។",
+                            not_cn: "1) 车缝机漏机油直接滴在面料上，工人直接擦掉继续做，机油富含有机质极易发霉。\n2) 蒸汽管上方冷凝积水不断滴落在包装线上，纸盒被打湿。",
+                            not_en: "1) Oil drops directly onto uppers; wiped off manually, oil residues support mold.\n2) High-temp steam pipe leaks condensate directly onto active packing lanes.",
+                            not_kh: "១) ប្រេងម៉ាស៊ីនស្រក់ចំសាច់ស្បែកជើង ហើយគ្រាន់តែជូតចេញរួចធ្វើបន្ត (ងាយដុះផ្សិត)។\n២) មានទឹកស្រក់ចេញពីទុយោចំហាយទឹកចំពីលើខ្សែសង្វាក់វេចខ្ចប់។"
+                        },
+                        { 
+                            id: "3.4", 
+                            en: "Are vacuum tables fully operational to extract residual moisture, and is dry steam checked to prevent water spitting?", 
+                            cn: "熨烫真空抽湿整烫台是否完全正常运转，干燥蒸汽是否无水分滴落，能彻底吸干成衣/鞋子残存水分？", 
+                            kh: "តើតុអ៊ុតបឺតខ្យល់ដំណើរការពេញលេញដើម្បីបឺតសំណើមចេញ និងចំហាយទឹកស្ងួតត្រូវបានពិនិត្យការពារការស្រក់ទឹក?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 烫斗抽湿风机强劲，能够完全抽走烫平后残留在纤维内部的水分。\n2) 烫机输出蒸汽干燥不含游离水，有定期排水排污制度。",
+                            fully_en: "1) Strong suction fans on vacuum tables actively extract heat/moisture.\n2) Clean dry steam used; regular blow-down schedule to prevent spit-water.",
+                            fully_kh: "១) កង្ហារបឺតខ្យល់នៅលើតុអ៊ុតមានកម្លាំងខ្លាំង អាចបឺតសំណើមចេញអស់។\n២) ប្រើចំហាយទឹកស្ងួតល្អ មានការបង្ហូរទឹកកខ្វក់ចេញជាទៀងទាត់ពីធុងចំហុយ។",
+                            not_cn: "1) 抽吸马达烧毁失效，工人关掉吸风强行蒸烫，鞋/衣烫后严重潮湿。\n2) 熨斗出水口不断“喷冷水”将面料打湿，未做烘干直接转包装。",
+                            not_en: "1) Vacuum motor failed; ironing performed without suction, trapping humidity.\n2) Wet condensation/water droplets sprayed from iron onto material, packed wet.",
+                            not_kh: "១) ម៉ូទ័របឺតខ្យល់ខូចខាត អ៊ុតដោយគ្មានការបឺតខ្យល់ បណ្តាលឱ្យកកស្ទះសំណើម។\n២) ឆ្នាំងអ៊ុតបាញ់ចេញជាតំណក់ទឹកធ្វើឱ្យសើមសាច់ក្រណាត់ ហើយខ្ចប់ទាំងសើម។"
+                        },
+                        { 
+                            id: "3.5", 
+                            en: "Are finished products fully cooled (recommended 1-2 hours) and returned to room temperature before packing?", 
+                            cn: "熨烫或烘道烘干后的成品是否留出充足的时间完全冷却和干燥（推荐至少 1 至 2 小时），降温至室温后方可包装？", 
+                            kh: "តើផលិតផលដែលអ៊ុត ឬកម្តៅរួចត្រូវបានទុកឱ្យត្រជាក់ពេញលេញ (ណែនាំ ១-២ ម៉ោង) ដល់សីតុណ្ហភាពបន្ទប់មុនវេចខ្ចប់?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 包装线设温检哨岗，对下线成品测温，确认恢复至环境温度方可装盒。\n2) 冷却缓冲区通风干燥，堆码有序，不阻碍降温空气流通。",
+                            fully_en: "1) Temperature checked; products must return to room temp before boxing.\n2) Cooling zones are dry and well-ventilated; stacking leaves sufficient air gaps.",
+                            fully_kh: "១) មានការវាស់សីតុណ្ហភាព៖ ផលិតផលត្រូវតែត្រឡប់ទៅសីតុណ្ហភាពធម្មតាសិនមុនខ្ចប់។\n២) កន្លែងទុកឱ្យត្រជាក់មានខ្យល់ចេញចូលល្អ ការរៀបចំគរទុកមានចន្លោះខ្យល់។",
+                            not_cn: "1) 热鞋/刚下整烫线的热衣立刻装入密封塑料袋，内袋起冷凝雾气水珠直接滋生霉菌。\n2) 为了追求产量快速包装，下机5分钟内即行封箱。",
+                            not_en: "1) Hot items packed into polybags instantly, causing internal sweat/moisture droplets.\n2) High-speed packing within 5 mins of heating, trapping heat inside cartons.",
+                            not_kh: "១) ផលិតផលនៅក្តៅយកទៅខ្ចប់ក្នុងថង់ជ័រភ្លាម បង្កជាតំណក់ទឹកក្នុងថង់នាំឱ្យដុះផ្សិត។\n២) ដើម្បីបង្កើនល្បឿន ខ្ចប់ទំនិញភ្លាមៗក្នុងរយៈពេល ៥នាទីក្រោយចេញពីម៉ាស៊ីនកម្តៅ។"
+                        },
+                        { 
+                            id: "3.6", 
+                            en: "Do packaging and inspection workers wear thin white synthetic/clean gloves, avoiding thick moisture-retaining cotton gloves?", 
+                            cn: "包装及检针岗位的操作员工是否佩戴薄款白手套，并严禁使用易吸湿、易霉变的厚棉手套？", 
+                            kh: "តើកម្មករផ្នែកវេចខ្ចប់ និងពិនិត្យផលិតផលពាក់ស្រោមដៃពណ៌សស្តើង ដោយជៀសវាងស្រោមដៃកប្បាសក្រាស់ដែលងាយបឺតសំណើម?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 全体包装与品质检针人员佩戴尼龙、乳胶或防潮涤纶薄白手套。\n2) 手套脏污受潮时有强制更换制度，并备足备用品。",
+                            fully_en: "1) All packers/inspectors wear thin synthetic (nylon/polyester) white gloves.\n2) Mandatory exchange schedule for soiled/sweaty gloves; sufficient spares.",
+                            fully_kh: "១) បុគ្គលិកវេចខ្ចប់/QC ពាក់ស្រោមដៃពណ៌សស្តើង (នីឡុង ឬប៉ូលីស្ទែរ)។\n២) មានកំណត់ការប្តូរស្រោមដៃថ្មីពេលស្រោមដៃចាស់ឡើងសើម ឬប្រឡាក់។",
+                            not_cn: "1) 员工直接光手触摸成品，手汗油渍污染鞋底、鞋面留下汗斑霉点源头。\n2) 戴粗厚起毛、吸满汗水发酸的劳保棉纱手套接触货物。",
+                            not_en: "1) Bare hands contact products, leaving sweat/sebum traces (ideal mold food).\n2) Thick, sweat-soaked canvas/cotton gloves worn, transmitting fungal spores.",
+                            not_kh: "១) ប្រើដៃទទេរប៉ះផលិតផល នាំឱ្យប្រឡាក់ញើស ឬខ្លាញ់ដៃ (ងាយដុះផ្សិតបំផុត)។\n២) ពាក់ស្រោមដៃកប្បាសក្រាស់ដែលជោកញើស និងផ្ទុកមេរោគផ្សិតប៉ះពាល់ទំនិញ។"
+                        },
+                        { 
+                            id: "3.7", 
+                            en: "Are inner boxes, outer cartons, wrapping papers, and foot forms completely dry and undamaged before packing?", 
+                            cn: "包装所用的内盒、外箱、鞋撑/脚模、拷贝纸等包材在装配前是否保持绝对干燥且无受潮水渍？", 
+                            kh: "តើប្រអប់ខាងក្នុង ប្រអប់កាតុង ក្រដាសខ្ចប់ និងពុម្ពជើងគឺស្ងួតទាំងស្រុង និងគ្មានការខូចខាតមុនពេលវេចខ្ចប់?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 包材在线上分类上架隔离干燥堆放，无脏污破损。\n2) 使用的水分测定仪证明其绝对干燥不超标，外形坚挺挺括。",
+                            fully_en: "1) Packaging materials stored on racks off floors, dry, clean, rigid.\n2) Random moisture checks confirm dry status before packing.",
+                            fully_kh: "១) សម្ភារៈវេចខ្ចប់រក្សាទុកលើធ្នើរដាច់ដោយឡែក ស្ងួត ស្អាត និងរឹងមាំល្អ។\n២) វាស់សំណើមជាប្រចាំដើម្បីធានាភាពស្ងួតមុនពេលយកទៅប្រើប្រាស់។",
+                            not_cn: "1) 外箱、内盒等包材堆放在地上吸饱湿气，外壳严重软塌软烂。\n2) 拷贝纸发黄起水痕，鞋模纸托受潮严重，仍强制装箱。",
+                            not_en: "1) Carton/inner boxes stacked on wet floor, absorbing moisture, getting soft.\n2) Wrapping paper has visible water spots or damp foot forms stuffed inside.",
+                            not_kh: "១) កាតុងខាងក្រៅ/ក្នុងគរទុកលើឥដ្ឋសើម នាំឱ្យបឺតសំណើមទន់ជ្រាយ។\n២) ក្រដាសខ្ចប់មានស្នាមអុជទឹក ឬពុម្ពជើងក្រដាសសើមតែនៅតែញាត់ចូលក្នុងស្បែកជើង។"
+                        },
+                        { 
+                            id: "3.8", 
+                            en: "Are anti-mold stickers/desiccants stored in airtight containers and applied immediately before final carton sealing?", 
+                            cn: "防霉贴、防霉片或干燥剂是否保存在绝对密封的桶内，并在完成装箱封箱前的最后一刻迅速投放完毕？", 
+                            kh: "តើស្ទីគ័រការពារផ្សិត/កញ្ចប់ស្រូបសំណើមត្រូវបានរក្សាទុកក្នុងធុងបិទជិត និងប្រើប្រាស់ភ្លាមៗមុនពេលបិទកាតុង?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 防霉包/干燥剂未拆封时保存在全密封铁桶、铝箔袋中。\n2) 封箱人员在投效防霉贴后立即完成外箱贴胶封口，过程小于2分钟，确保防护因子有效浓度。",
+                            fully_en: "1) Anti-mold stickers kept in airtight containers (sealed metal bins/foil bags).\n2) Items pasted and carton taped immediately (within 2 mins) to preserve vapor active agents.",
+                            fully_kh: "១) ស្ទីគ័រការពារផ្សិតត្រូវបានរក្សាទុកក្នុងធុងដែក ឬថង់អាលុយមីញ៉ូមបិទជិត។\n២) ដាក់ស្ទីគ័ររួចត្រូវបិទកាតុងភ្លាមៗ (ក្នុងរយៈពេល ២នាទី) ដើម្បីរក្សាប្រសិទ្ធភាព។",
+                            not_cn: "1) 防霉贴直接大口敞开暴露在空气中吸潮失效、活性分子提前释放干净。\n2) 提早将防霉包丢入内盒，过数小时、甚至跨天后再进行胶带封箱。",
+                            not_en: "1) Anti-mold stickers left open on tables, exhausting active ingredients early.\n2) Stickers dropped into boxes hours before sealing, venting the gas out.",
+                            not_kh: "១) ទុកស្ទីគ័រចំហរលើតុ ធ្វើឱ្យបាត់បង់សារធាតុសកម្មមុនពេលប្រើប្រាស់។\n២) ដាក់ស្ទីគ័រចូលក្នុងប្រអប់រាប់ម៉ោងទើបបិទកាតុង បណ្តាលឱ្យហើរជាតិអស់។"
+                        },
+                        { 
+                            id: "3.9", 
+                            en: "Before packaging, does QC randomly measure and record the moisture content of finished products, ensuring it is within limits?", 
+                            cn: "在包装工序之前，QC是否对成品含水率进行随机测试、记录并确保其低于品牌规定要求？", 
+                            kh: "មុនពេលវេចខ្ចប់ តើ QC បានវាស់ស្ទង់ និងកត់ត្រាកម្រិតសំណើមនៃផលិតផលសម្រេចដោយធានាថាវានៅក្រោមដែនកំណត់?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 包装QC每小时定时抽样检测鞋面、鞋垫、鞋底含水率。\n2) 测试数据完全低于品牌控制基准线，并有详细检测台账存档。",
+                            fully_en: "1) QC measures product moisture hourly (uppers, insoles, outsoles).\n2) Values conform to brand-defined dry thresholds; records signed off daily.",
+                            fully_kh: "១) QC វាស់សំណើមផលិតផលរៀងរាល់ម៉ោង (ស្បែកខាងលើ ទ្រនាប់ ជង្រុកបាត)។\n២) តម្លៃសំណើមត្រូវតែទាបជាងដែនកំណត់កំណត់ដោយប្រេន និងមានកំណត់ត្រា។",
+                            not_cn: "1) 包装端没有含水率计，QC没有任何测试成品干湿度的动作。\n2) 抽样水分超标未做退回返烘，依然直接做包装贴签出车间。",
+                            not_en: "1) Packing line has no moisture meter; QC performs no factual material dryness checks.\n2) Products with excessive moisture are packed regardless without re-drying.",
+                            not_kh: "១) គ្មានឧបករណ៍វាស់សំណើម QC មិនបានវាស់ស្ទង់ភាពស្ងួតជាក់ស្តែងឡើយ។\n២) ផលិតផលដែលមានសំណើមលើសកំណត់នៅតែត្រូវបានវេចខ្ចប់ដោយមិនបញ្ជូនទៅកម្តៅឡើងវិញ។"
+                        },
+                        { 
+                            id: "3.10", 
+                            en: "Is the packing line and surrounding area clean, free of dust/mold accumulation, and conveyor belts sanitized regularly?", 
+                            cn: "包装线及周边环境是否保持一尘不染，无霉菌孢子堆积，传送带定期使用温和防霉液擦拭？", 
+                            kh: "តើខ្សែសង្វាក់វេចខ្ចប់ និងតំបន់ជុំវិញស្អាត គ្មានការប្រមូលផ្តុំធូលី/ផ្សិត និងខ្សែពានត្រូវបានជូតសម្អាតជាប្រចាំ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 包装流水线、台面干净无尘，传送皮带每日交接班进行擦洗和防霉稀释剂喷洗。\n2) 包装区域每周末彻底大扫除除尘消杀，保持环境无死角卫生。",
+                            fully_en: "1) Packaging surfaces/conveyors clean, wiped down with mild anti-mold agent daily.\n2) Systematic weekend cleaning program to prevent mold spore accumulation.",
+                            fully_kh: "១) តុនិងខ្សែពានវេចខ្ចប់ស្អាត ត្រូវបានជូតសម្អាតដោយទឹកថ្នាំការពារផ្សិតរាល់ថ្ងៃ។\n២) មានការសម្អាតធំរៀងរាល់ចុងសប្តាហ៍ដើម្បីការពារការកកើតស្ព័រផ្សិត។",
+                            not_cn: "1) 传送皮带底下常年积满灰尘黑泥，皮带表皮开裂起霉斑点，正对包装物。\n2) 包装工位夹缝有旧食物垃圾变霉长毛，严重污染包装小环境。",
+                            not_en: "1) Thick mold/dirt under conveyors; belts show cracked surfaces with mold spots.\n2) Food/beverage debris found decaying inside drawers of packing tables.",
+                            not_kh: "១) មានធូលីនិងដីខ្មៅនៅក្រោមខ្សែពាន ខ្សែពានមានប្រេះនិងដុះផ្សិតខ្មៅប៉ះទំនិញ។\n២) មានសំណល់អាហាររលួយដុះផ្សិតនៅក្នុងថតតុវេចខ្ចប់ បង្កហានិភ័យខ្លាំង។"
+                        },
+                        { 
+                            id: "3.11", 
+                            en: "Is the loading and unloading dock equipped with rain canopies to ensure all cartons are protected from rain?", 
+                            cn: "装货和卸货区域是否配有雨篷，确保在雨天装箱和卸货操作时纸箱不会淋雨受潮？", 
+                            kh: "តើកន្លែងផ្ទេរទំនិញឡើងចុះមានដំបូលការពារទឹកភ្លៀង ដើម្បីធានាថាកាតុងទាំងអស់ត្រូវបានការពារមិនឱ្យត្រូវទឹកភ្លៀង?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 装运码头上方装有超宽伸缩雨篷，雨天能完全覆盖集装箱尾门及装货间空隙。\n2) 地面做斜坡防积水设计，确保雨水快速流走不倒灌。",
+                            fully_en: "1) Loading dock equipped with functional wide canopy covering the gap over container doors.\n2) Proper ground slope design prevents water accumulation/splash around loading bays.",
+                            fully_kh: "១) កន្លែងផ្ទេរទំនិញមានដំបូលការពារទឹកភ្លៀងធំទូលាយគ្របដណ្តប់ជិតទ្វារកុងតឺន័រ។\n២) ផ្ទៃដីមានចំណោតបង្ហូរទឹកបានលឿន ការពារការហូរច្រាលទឹកចូល។",
+                            not_cn: "1) 无任何雨篷防护，雨天装箱全靠雨伞和塑料布草草遮盖，纸箱极易淋湿。\n2) 地面积水严重，纸箱在装车前放在水泥地湿水吸潮。",
+                            not_en: "1) Canopy is missing/torn; rain directly exposes cartons to moisture during container stuffing.\n2) Cartons set on wet puddles at loading bay before being loaded.",
+                            not_kh: "១) គ្មានដំបូល ឬដំបូលធ្លុះធ្លាយ ធ្វើឱ្យកាតុងត្រូវទឹកភ្លៀងពេលកំពុងផ្ទេរចូលកុងតឺន័រ។\n២) កាតុងត្រូវដាក់លើឥដ្ឋដែលមានដក់ទឹកសើមមុនពេលផ្ទេរឡើងឡាន។"
+                        },
+                        { 
+                            id: "3.12", 
+                            en: "Before loading, is the container inspected to ensure it has no holes, cracks, and is 100% light-tight and watertight?", 
+                            cn: "装货前是否检查集装箱无孔洞、无裂缝，关闭箱门在内部观察确保100%不漏光、不漏水？", 
+                            kh: "មុនពេលផ្ទុក តើកុងតឺន័រត្រូវបានត្រួតពិនិត្យដើម្បីធានាថាគ្មានប្រហោង គ្មានស្នាមប្រេះ និងមិនលេចធ្លាយទឹក ១០០%?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 严格执行“七点检箱法”。人进箱内闭门，观察全箱壁无任何漏光亮点。\n2) 台风暴雨天气后检查确保箱顶无积水渗水，底板完好无裂隙。",
+                            fully_en: "1) Strict '7-point inspection' enforced. Inspect from inside with doors shut to check light leakage.\n2) Roof/panels show no wet spots, rust cracks, or physical tears.",
+                            fully_kh: "១) អនុវត្តការត្រួតពិនិត្យ ៧ចំណុច។ ចូលទៅក្នុងកុងតឺន័រហើយបិទទ្វារមើល ដើម្បីរកមើលការលេចធ្លាយពន្លឺ។\n២) ដំបូលនិងជញ្ជាំងគ្មានស្នាមសើម ស្នាមច្រែះ ឬធ្លុះធ្លាយ។",
+                            not_cn: "1) 未做光密闭试验即直接塞箱，集装箱壁有明显破洞，运输中海水倒灌打湿鞋箱。\n2) 柜顶有细微裂纹缝隙，暴雨后顶层纸箱全部淋烂并长霉。",
+                            not_en: "1) Container stuffed without inspection; small wall holes leak saltwater in during maritime transit.\n2) Hairline roof cracks cause rainwater seepage, ruining top-layer cartons during transit.",
+                            not_kh: "១) មិនបានពិនិត្យពន្លឺមុននឹងផ្ទេរទំនិញចូល ធ្វើឱ្យទឹកសមុទ្រចូលតាមប្រហោងពេលដឹកជញ្ជូន។\n២) មានប្រហោងតូចៗនៅដំបូល បណ្តាលឱ្យទឹកភ្លៀងលេចធ្លាយសើមប្រអប់កាតុងខាងលើ។"
+                        },
+                        { 
+                            id: "3.13", 
+                            en: "Do the container doors close tightly, and are the rubber door seals in good, unbroken condition?", 
+                            cn: "集装箱箱门是否能关闭严密，箱门边缘的密封橡胶条是否完整无破损？", 
+                            kh: "តើទ្វារកុងតឺន័របិទជិតល្អ និងស្កុតកៅស៊ូទ្វារស្ថិតក្នុងស្ថានភាពល្អ មិនខូចខាត?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 货柜箱门锁闭合顺畅、无变形卡死，门夹锁紧定位。\n2) 边缘黑色防雨橡胶密封圈圈条完整、无开裂或物理缺失，气密性佳。",
+                            fully_en: "1) Container doors align and lock flush easily; door hardware undamaged.\n2) Black rubber gaskets around door perimeter are flexible, continuous, and uncracked.",
+                            fully_kh: "១) ទ្វារកុងតឺន័របិទចាក់សោបានល្អ គ្មានការវៀចវេរ ឬខូចខាត។\n២) ស្កុតកៅស៊ូខ្មៅជុំវិញទ្វារទន់ស្វិតល្អ គ្មានការដាច់រហែក ឬខូចខាតឡើយ។",
+                            not_cn: "1) 集装箱密封胶条老化破烂、甚至局部断开，暴雨行车时雨水直接从门缝冲入柜内。\n2) 箱门铰链严重锈蚀变形，无法完全合拢关紧，留有极大漏水隐患。",
+                            not_en: "1) Rubber seals worn-out, torn or missing in sections, allowing rain intrusion via door frame.\n2) Door hinges deformed, failing to close completely, leaving a noticeable gap.",
+                            not_kh: "១) ស្កុតកៅស៊ូចាស់ដាច់រហែក ធ្វើឱ្យទឹកភ្លៀងចូលតាមចន្លោះទ្វារពេលឡានកំពុងរត់។\n២) គន្លឹះទ្វារច្រែះនិងវៀច មិនអាចបិទជិតល្អ បន្សល់ទុកប្រហោងលេចទឹក។"
+                        },
+                        { 
+                            id: "3.14", 
+                            en: "Is the moisture content of the container floor measured before loading to ensure it is dry and below 25% (or 19%)?", 
+                            cn: "货柜地板在装箱前是否用含水仪测量，确保含水率低于25%（或19%以下，视品牌标准而定）并触摸干燥？", 
+                            kh: "តើកម្រិតសំណើមនៃក្តារបាតកុងតឺន័រត្រូវបានវាស់មុនពេលផ្ទុក ដើម្បីធានាថាវាស្ងួត និងក្រោម ២៥% (ឬ ១៩%)?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 对货柜木质地板前、中、后多点测试木材含水率。\n2) 地板含水率测试仪测量结果需低于25%（部分品牌严控19%），确保木底干燥不返潮。",
+                            fully_en: "1) Wood floorboard moisture tested at front, middle, and rear sections.\n2) Moisture level strictly below 25% (or 19% depending on brand), dry to touch.",
+                            fully_kh: "១) វាស់សំណើមបាតឈើកុងតឺន័រនៅផ្នែកខាងមុខ កណ្តាល និងខាងក្រោយ។\n២) កម្រិតសំណើមក្រោម ២៥% (ឬ ១៩% តាមប្រេន) និងស្ងួតល្អពេលស្ទាបប៉ះ។",
+                            not_cn: "1) 刚水洗过的集装箱底板有大片深色湿斑，未干即装箱，底层货物受木板潮气发霉。\n2) 无测水仪器，或地板测水读数高达30%以上，仍强行装载出货。",
+                            not_en: "1) Container washed recently with dark wet patches on wood floor; loaded immediately.\n2) Floor board moisture is >30%, resulting in evaporation and high moisture in cargo.",
+                            not_kh: "១) បាតឈើទើបលាងទឹកមានស្នាមសើមខ្មៅ តែនៅតែផ្ទុកទំនិញចូល ធ្វើឱ្យកាតុងក្រោមដុះផ្សិត។\n២) គ្មានឧបករណ៍វាស់ ឬវាស់ឃើញលើសពី ៣០% តែនៅតែបង្ខំផ្ទុកទំនិញចេញ។"
+                        },
+                        { 
+                            id: "3.15", 
+                            en: "Are brand-approved shipping container desiccant bags/poles hung in sufficient quantities inside the container?", 
+                            cn: "集装箱内是否按品牌规格与推荐数量，规范悬挂了专用货柜干燥挂袋（集装箱干燥剂）？", 
+                            kh: "តើកញ្ចប់ស្រូបសំណើមខ្នាតធំសម្រាប់កុងតឺន័រត្រូវបានព្យួរក្នុងចំនួនគ្រប់គ្រាន់ និងត្រឹមត្រូវតាមស្ដង់ដារប្រេន?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 使用品牌指定的高吸收货柜干燥剂挂带，通常每柜根据尺寸悬挂 4 至 8 条。\n2) 悬挂在箱壁内凹凹槽内，不挤压纸箱，挂环牢固不脱落。",
+                            fully_en: "1) Hang approved cargo desiccants/strips on the upper container rings (typically 4-8 poles).\n2) Placed in wall recesses to prevent squeezing cartons; hooks secured properly.",
+                            fully_kh: "១) ព្យួរកញ្ចប់ស្រូបសំណើមខ្នាតធំប្រេនកំណត់ (ជាទូទៅ ៤ ទៅ ៨ កញ្ចប់តាមទំហំ)។\n២) ដាក់តាមចន្លោះជ្រុងជញ្ជាំងកុងតឺន័រ មិនឱ្យញាត់ណែនកាតុង និងព្យួរបានមាំ។",
+                            not_cn: "1) 完全未挂任何货柜防潮干燥剂，海运周期长温湿度波动大引发“货柜雨”造成大批货损。\n2) 敷衍应付，使用低劣、吸湿饱和漏液失效的袋装沙粒型干燥包，直接丢在箱底。",
+                            not_en: "1) Zero container desiccants hung, causing severe moisture condensation during ocean transport.\n2) Used cheap silica bags tossed on floor; bags leaked corrosive fluid onto shoe boxes.",
+                            not_kh: "១) មិនបានព្យួរកញ្ចប់ស្រូបសំណើមទាល់តែសោះ បង្កជាបាតុភូតស្រក់ទឹកក្នុងកុងតឺន័រខ្ទេចទំនិញ។\n២) ប្រើកញ្ចប់ស្រូបសំណើមថោកៗក្រាលលើបាត ដែលងាយលេចធ្លាយជាតិគីមីខូចប្រអប់។"
+                        },
+                        { 
+                            id: "3.16", 
+                            en: "Are hand sanitizers provided at sewing/packing line entrances, requiring workers to disinfect hands before starting?", 
+                            cn: "车缝与包装车间入口处是否提供免洗消毒洗手液，并要求员工在上岗前清洁双手？", 
+                            kh: "តើមានទឹកលាងដៃសម្លាប់មេរោគនៅច្រកចូលផ្នែកដេរ/វេចខ្ចប់ និងតម្រូវឱ្យកម្មករលាងដៃមុនពេលចូលធ្វើការ?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 车间大门及每条生产线入口配备挂壁式自动红外免洗消毒洗手液。\n2) 班组长严格监管，上岗前和上厕所返回后必须对手部进行清洁除菌。",
+                            fully_en: "1) Sanitizer dispensers installed at line entrances; auto-dispense preferred.\n2) Supervisors ensure compliance before shifts and upon return from restrooms.",
+                            fully_kh: "១) មានទឹកលាងដៃស្វ័យប្រវត្តិក្បែរច្រកចូល ឬនៅតាមខ្សែសង្វាក់ផលិតកម្ម។\n២) ប្រធានក្រុមត្រួតពិនិត្យយ៉ាងតឹងរ៉ឹងឱ្យលាងដៃមុនចូលធ្វើការ និងក្រោយពេលចេញពីបង្គន់។",
+                            not_cn: "1) 车间门口除菌洗手液干涸多日无补充，沦为摆设。\n2) 员工手上有污渍、汗斑直接接触高档浅色真皮或帆布物料，极易引致出货后霉变。",
+                            not_en: "1) Sanitizers are dry/empty with no refill stock available.\n2) Workers handle clean leather/canvas with sweat-soiled hands, seeding mold spores.",
+                            not_kh: "១) ឧបករណ៍លាងដៃទទេរគ្មានទឹកថ្នាំបំពេញជាច្រើនថ្ងៃ ទុកសម្រាប់តែបង្ហាញ។\n២) បុគ្គលិកប៉ះពាល់ស្បែកជើងក្រណាត់ឬស្បែកមានតម្លៃទាំងដៃកខ្វក់ បង្កជាផ្សិតនាពេលក្រោយ។"
+                        },
+                        { 
+                            id: "3.17", 
+                            en: "Do QC and packers enforce a strict policy: any damp, dirty, smelly, or suspected moldy product is rejected from packing?", 
+                            cn: "质检和包装员是否执行一票否决：凡发现有任何受潮、脏污、散发异味或疑似霉斑的成品，严禁入盒包装？", 
+                            kh: "តើ QC និងបុគ្គលិកវេចខ្ចប់អនុវត្តច្បាប់តឹងរ៉ឹង៖ រាល់ផលិតផលដែលសើម ប្រឡាក់ ធុំក្លិន ឬសង្ស័យថាមានផ្សិត ត្រូវបានបដិសេធមិនខ្ចប់?", 
+                            status: 'P', 
+                            photo: null, 
+                            comments: "",
+                            fully_cn: "1) 包装和终检人员掌握清晰的“零缺陷防霉控制红线”。\n2) 发现任何含水率超标、发潮、异味的在制品，立即扣留并贴红色返工标签退回前工序彻底纠正，绝不放行。",
+                            fully_en: "1) Packing/QC staff operate on strict zero-tolerance policy against dampness/smell.\n2) Suspect materials isolated instantly, flagged red, and returned to drying buffer zone.",
+                            fully_kh: "១) បុគ្គលិក QC និងវេចខ្ចប់យល់ដឹងច្បាស់ពីវិធានការដាច់ខាត (Zero Tolerance)។\n២) រាល់ផលិតផលសង្ស័យ សើម ឬធុំក្លិន ត្រូវដកចេញភ្លាម វាយផ្លាកក្រហមបញ្ជូនទៅកម្តៅឡើងវិញ។",
+                            not_cn: "1) 明知成品手感潮湿，甚至面料表面已有肉眼可见白色绒毛状、斑点状霉菌，因赶交期仍直接装包封箱。\n2) 对返工品没有追踪、直接混入大货出库，直接污染同箱健康产品。",
+                            not_en: "1) Damp/musty items packed regardless to meet shipping quotas, causing bulk contamination.\n2) Defective stock returned without proper sorting, leaking wet units into export cartons.",
+                            not_kh: "១) ដឹងថាផលិតផលសើម ឬឃើញមានដុះផ្សិតសៗហើយ តែដោយសារប្រញាប់ចេញទំនិញក៏នៅតែខ្ចប់ចូលប្រអប់។\n២) ទំនិញ返工 គ្មានការតាមដានច្បាស់លាស់ យកមកលាយជាមួយទំនិញល្អ បង្កឱ្យរលួយដុះផ្សិតទាំងអស់។"
+                        }
                     ]
                 }
             ]
@@ -283,25 +820,40 @@
             renderSection(activeSectionId);
             initCharts();
             updateCharts();
+            
+            // Set default date as today
+            const todayStr = new Date().toISOString().substring(0, 10);
+            document.getElementById('audit-date-input').value = todayStr;
+            
+            // Listen to input changes to sync real-time print preview
+            document.getElementById('audit-date-input').addEventListener('input', syncPrintDetails);
+            document.getElementById('auditor-name-input').addEventListener('input', syncPrintDetails);
+            document.getElementById('last-score-input').addEventListener('input', syncPrintDetails);
+            
+            syncPrintDetails();
             renderPrintLayout();
         }
 
-        // Render upper tab selectors
+        // Render upper tab selectors (Requirement 6: Trilingual layout stacked)
         function renderTabs() {
             const nav = document.getElementById('tab-navigation');
             nav.innerHTML = auditData.sections.map(section => {
                 const failCount = section.items.filter(item => item.status === 'F').length;
                 const totalWithPhotos = section.items.filter(item => item.photo !== null).length;
-                const badgeHtml = failCount > 0 ? `<span class="ml-1 px-1.5 py-0.5 bg-red-500 text-[10px] text-white rounded-full font-bold">${failCount}❌</span>` : '';
-                const photoBadgeHtml = totalWithPhotos > 0 ? `<span class="ml-1 px-1.5 py-0.5 bg-sky-500 text-[10px] text-white rounded-full font-bold">${totalWithPhotos}📷</span>` : '';
+                
+                const badgeHtml = failCount > 0 ? `<span class="ml-1 px-1.5 py-0.5 bg-red-500 text-[9px] text-white rounded-full font-bold">${failCount}❌</span>` : '';
+                const photoBadgeHtml = totalWithPhotos > 0 ? `<span class="ml-1 px-1.5 py-0.5 bg-sky-500 text-[9px] text-white rounded-full font-bold">${totalWithPhotos}📷</span>` : '';
 
                 return `
                     <button onclick="switchSection('${section.id}')" 
                         id="tab-${section.id}"
-                        class="px-5 py-3 whitespace-nowrap rounded-xl text-xs font-bold transition-all flex items-center justify-center ${section.id === activeSectionId ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">
-                        <span>${section.title_cn}</span>
-                        ${badgeHtml}
-                        ${photoBadgeHtml}
+                        class="px-5 py-3 whitespace-nowrap rounded-2xl text-xs font-bold transition-all flex flex-col items-center justify-center min-w-[150px] shrink-0 ${section.id === activeSectionId ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">
+                        <div class="flex items-center gap-1">
+                            <span>${section.title_cn}</span>
+                            ${badgeHtml}
+                            ${photoBadgeHtml}
+                        </div>
+                        <span class="text-[9px] font-medium text-slate-400 block mt-0.5">${section.title_en} | ${section.title_kh}</span>
                     </button>
                 `;
             }).join('');
@@ -312,6 +864,19 @@
             activeSectionId = id;
             renderTabs();
             renderSection(id);
+        }
+
+        // Accordion Toggle
+        function toggleCriteria(id) {
+            const panel = document.getElementById(id);
+            const arrow = document.getElementById('arrow-' + id);
+            if(panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                arrow.innerHTML = '▼';
+            } else {
+                panel.classList.add('hidden');
+                arrow.innerHTML = '▶';
+            }
         }
 
         // Render the items cards inside the active section
@@ -353,6 +918,35 @@
                             <p class="khmer-text mt-2 border-t border-slate-100 pt-2 font-medium">${item.kh}</p>
                         </div>
 
+                        <!-- Requirement 1: Collapsible Fully Meet / Do Not Meet Trilingual Details -->
+                        <div class="mt-3 border-t border-slate-100 pt-3">
+                            <button onclick="toggleCriteria('criteria-${section.id}-${item.id}')" 
+                                class="text-[10px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 uppercase tracking-wider focus:outline-none">
+                                <span id="arrow-criteria-${section.id}-${item.id}">▶</span> 
+                                <span>判定标准 & 违规细节 / Criteria / លក្ខខណ្ឌវាយតម្លៃ</span>
+                            </button>
+                            <div id="criteria-${section.id}-${item.id}" class="hidden mt-2 p-3 bg-slate-50 rounded-xl border border-slate-150 space-y-3">
+                                <!-- Fully Meet -->
+                                <div class="border-l-2 border-emerald-500 pl-2.5">
+                                    <div class="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                                        🟢 完全满足 / Fully Meet / សម្រេចបានទាំងស្រុង
+                                    </div>
+                                    <p class="text-[11px] text-slate-800 font-semibold mt-1 whitespace-pre-line">${item.fully_cn}</p>
+                                    <p class="text-[10px] text-slate-500 italic mt-0.5 whitespace-pre-line">${item.fully_en}</p>
+                                    <p class="text-[11px] text-slate-600 font-medium mt-0.5 whitespace-pre-line">${item.fully_kh}</p>
+                                </div>
+                                <!-- Do Not Meet -->
+                                <div class="border-l-2 border-red-500 pl-2.5">
+                                    <div class="text-[10px] font-bold text-red-700 flex items-center gap-1">
+                                        🔴 不符合 / Do Not Meet / មិនអនុលោមភាព
+                                    </div>
+                                    <p class="text-[11px] text-slate-800 font-semibold mt-1 whitespace-pre-line">${item.not_cn}</p>
+                                    <p class="text-[10px] text-slate-500 italic mt-0.5 whitespace-pre-line">${item.not_en}</p>
+                                    <p class="text-[11px] text-slate-600 font-medium mt-0.5 whitespace-pre-line">${item.not_kh}</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Action Area (Buttons, Comment and Photo Camera Input) -->
                         <div class="mt-5 pt-4 border-t border-slate-100 space-y-4">
                             
@@ -362,7 +956,7 @@
                                 <input type="text" 
                                     id="comment-input-${section.id}-${item.id}"
                                     value="${item.comments}" 
-                                    placeholder="输入点检备注 (原因或改善措施...)" 
+                                    placeholder="输入备注或发现的异常状况..." 
                                     onchange="handleCommentChange('${section.id}', '${item.id}', this.value)"
                                     class="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition" />
                             </div>
@@ -443,7 +1037,7 @@
             renderSection(sectionId);
             renderTabs();
             updateCharts();
-            renderPrintLayout(); // Synchronize the print layout dynamically
+            renderPrintLayout(); 
             showToast(`已将 Item ${itemId} 修改为 ${status === 'P' ? '合格 PASS' : status === 'F' ? '不合格 FAIL' : '不适用 N/A'}`);
         }
 
@@ -452,7 +1046,7 @@
             const section = auditData.sections.find(s => s.id === sectionId);
             const item = section.items.find(i => i.id === itemId);
             item.comments = value;
-            renderPrintLayout(); // Sync change
+            renderPrintLayout(); 
         }
 
         // Handle camera picture input reading
@@ -493,7 +1087,7 @@
                         renderSection(sectionId);
                         renderTabs();
                         updateCharts();
-                        renderPrintLayout(); // Sync photo
+                        renderPrintLayout(); 
                         showToast(`📷 Item ${itemId} 现场取证照片已成功保存！`);
                     };
                     img.src = e.target.result;
@@ -510,11 +1104,11 @@
             renderSection(sectionId);
             renderTabs();
             updateCharts();
-            renderPrintLayout(); // Sync photo removal
+            renderPrintLayout(); 
             showToast(`🗑️ 已删除 Item ${itemId} 的照片`);
         }
 
-        // Display quick feedback toast message box (instead of browser alert())
+        // Display quick feedback toast
         function showToast(text, icon = "🔔") {
             const toast = document.getElementById('toast-message');
             document.getElementById('toast-text').innerText = text;
@@ -533,7 +1127,18 @@
             }, 3000);
         }
 
-        // Chart Initialization (Charts optimized for Scoreboard layout)
+        // Sync inputs with printable details
+        function syncPrintDetails() {
+            const auditor = document.getElementById('auditor-name-input').value || '未填写 / Pending / មិនទាន់បំពេញ';
+            const date = document.getElementById('audit-date-input').value || '未填写 / Pending / មិនទាន់បំពេញ';
+            const lastScore = document.getElementById('last-score-input').value || '未填写 / Pending';
+
+            document.getElementById('print-auditor').innerText = auditor;
+            document.getElementById('print-date').innerText = date;
+            document.getElementById('print-last-score').innerText = lastScore;
+        }
+
+        // Chart Initialization (Percentage optimized)
         function initCharts() {
             const ctxMain = document.getElementById('mainChart').getContext('2d');
             const ctxBar = document.getElementById('barChart').getContext('2d');
@@ -541,10 +1146,10 @@
             mainChart = new Chart(ctxMain, {
                 type: 'doughnut',
                 data: {
-                    labels: ['PASS (得分项)', 'FAIL (不合格)', 'N/A (不适用)'],
+                    labels: ['PASS (合格)', 'FAIL (不合格)', 'N/A (不适用)'],
                     datasets: [{
                         data: [0, 0, 0],
-                        backgroundColor: ['#2563eb', '#ef4444', '#64748b'],
+                        backgroundColor: ['#10b981', '#ef4444', '#64748b'],
                         borderWidth: 2,
                         borderColor: '#ffffff',
                         hoverOffset: 6
@@ -562,9 +1167,9 @@
             barChart = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
-                    labels: auditData.sections.map(s => s.title_cn.split('. ')[1] || s.title_cn),
+                    labels: auditData.sections.map(s => s.title_cn),
                     datasets: [
-                        { label: '区域得分 Area Score', data: [], backgroundColor: '#2563eb', borderRadius: 6 }
+                        { label: '区域合规率 Compliance %', data: [], backgroundColor: '#0ea5e9', borderRadius: 8 }
                     ]
                 },
                 options: {
@@ -572,7 +1177,14 @@
                     responsive: true,
                     scales: {
                         x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } },
-                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100, 
+                            ticks: { 
+                                callback: function(value) { return value + "%"; },
+                                font: { size: 10, weight: 'bold' }
+                            } 
+                        }
                     },
                     plugins: {
                         legend: { display: false }
@@ -581,41 +1193,46 @@
             });
         }
 
-        // Live score calculations and stats updates
+        // Live score calculations and stats updates (Percentage system)
         function updateCharts() {
             let totalP = 0, totalF = 0, totalNA = 0;
-            const barDataP = [];
+            const barPercentages = [];
 
             auditData.sections.forEach(s => {
-                let sP = 0;
+                let sectionP = 0, sectionF = 0, sectionNA = 0;
                 s.items.forEach(item => {
-                    if (item.status === 'P') { sP++; totalP++; }
-                    else if (item.status === 'F') { totalF++; }
-                    else totalNA++;
+                    if (item.status === 'P') { sectionP++; totalP++; }
+                    else if (item.status === 'F') { sectionF++; totalF++; }
+                    else { sectionNA++; totalNA++; }
                 });
-                barDataP.push(sP);
+                
+                const sectionEligible = s.items.length - sectionNA;
+                const sectionScorePercent = sectionEligible > 0 ? Math.round((sectionP / sectionEligible) * 100) : 0;
+                barPercentages.push(sectionScorePercent);
             });
 
             // Update main ring chart
             mainChart.data.datasets[0].data = [totalP, totalF, totalNA];
             mainChart.update();
 
-            // Update bar chart comparisons
-            barChart.data.datasets[0].data = barDataP;
+            // Requirement 4: Update bar chart comparisons in percentage
+            barChart.data.datasets[0].data = barPercentages;
             barChart.update();
 
-            // Update Score Dashboard
-            document.getElementById('overall-score-display').innerText = `${totalP} / ${totalItemsCount} 分`;
+            // Requirement 3: Calculate and Update Score Dashboard in percentage
+            const totalEligible = totalItemsCount - totalNA;
+            const finalScorePercentage = totalEligible > 0 ? ((totalP / totalEligible) * 100).toFixed(1) : "0.0";
+            
+            document.getElementById('overall-score-display').innerText = `${finalScorePercentage}%`;
+            document.getElementById('center-percent-text').innerText = `${finalScorePercentage}%`;
             
             // Set print stats
-            document.getElementById('print-score').innerText = `${totalP} / ${totalItemsCount}`;
+            document.getElementById('print-score').innerText = `${finalScorePercentage}% (${totalP}/${totalEligible} PASS)`;
         }
 
         // Construct printable report with ALL items across ALL sections dynamically
         function renderPrintLayout() {
             const printContainer = document.getElementById('print-sections-container');
-            const today = new Date();
-            document.getElementById('print-date').innerText = today.toLocaleDateString() + ' ' + today.toLocaleTimeString();
 
             printContainer.innerHTML = auditData.sections.map(sec => {
                 const rows = sec.items.map(item => {
@@ -636,7 +1253,7 @@
                             <td class="p-2 text-center ${statusColor} text-xs font-extrabold">${statusLabel}</td>
                             <td class="p-2 text-[10px] text-slate-700">
                                 ${item.comments ? `<div class="mb-2 font-medium">备注: ${item.comments}</div>` : ''}
-                                ${item.photo ? `<div class="mt-1"><img src="${item.photo}" class="h-20 w-auto rounded border border-slate-300 object-cover" /></div>` : '<span class="text-slate-400">无现场照片</span>'}
+                                ${item.photo ? `<div class="mt-1"><img src="${item.photo}" class="h-24 w-auto rounded border border-slate-300 object-cover" /></div>` : '<span class="text-slate-400">无现场照片</span>'}
                             </td>
                         </tr>
                     `;
@@ -644,7 +1261,7 @@
 
                 return `
                     <div class="print-page-break">
-                        <h2 class="text-sm font-extrabold text-slate-950 mb-2 border-b border-slate-900 pb-1">
+                        <h2 class="text-sm font-extrabold text-slate-950 mb-2 border-b border-slate-900 pb-1 uppercase">
                             ${sec.title_cn} | ${sec.title_en} | ${sec.title_kh}
                         </h2>
                         <table class="w-full text-left border-collapse border border-slate-300">
@@ -667,71 +1284,9 @@
 
         // Trigger native print process
         function triggerPrint() {
-            // Force rendering standard print templates
+            syncPrintDetails();
             renderPrintLayout();
             window.print();
-        }
-
-        // Export audit data into text overlay
-        function exportAuditReport() {
-            let reportText = `==================================================\n`;
-            reportText += `       🛡️ EVK MOLD AUDIT DIGITAL REPORT             \n`;
-            reportText += `==================================================\n\n`;
-            
-            let totalP = 0, totalF = 0, totalNA = 0, totalPhotos = 0;
-            
-            auditData.sections.forEach(s => {
-                reportText += `【${s.title_cn} | ${s.title_en}】\n`;
-                s.items.forEach(i => {
-                    const picIndicator = i.photo ? "[📷 有现场图]" : "[无图]";
-                    const commentIndicator = i.comments ? ` (备注: ${i.comments})` : '';
-                    reportText += `  Item ${i.id}: [${i.status}] - ${i.cn.substring(0, 30)}... ${picIndicator}${commentIndicator}\n`;
-                    if (i.status === 'P') totalP++;
-                    else if (i.status === 'F') totalF++;
-                    else totalNA++;
-                    if (i.photo) totalPhotos++;
-                });
-                reportText += `--------------------------------------------------\n`;
-            });
-
-            reportText += `\n【综合统计 EVK Score Card】\n`;
-            reportText += `  总分/总项目数 (Max Score): ${totalItemsCount}\n`;
-            reportText += `  获得得分 (PASS items): ${totalP} 分\n`;
-            reportText += `  不合格项 (FAIL): ${totalF}\n`;
-            reportText += `  不适用项 (N/A): ${totalNA}\n`;
-            reportText += `  附图证据总数 (Photos): ${totalPhotos}\n`;
-            reportText += `==================================================\n`;
-
-            const exportModal = document.createElement('div');
-            exportModal.className = 'fixed inset-0 bg-black/60 flex justify-center items-center p-4 z-[100]';
-            exportModal.id = 'export-modal-overlay';
-            exportModal.innerHTML = `
-                <div class="bg-white rounded-2xl w-full max-w-lg p-6 flex flex-col max-h-[85vh]">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-1">💾 导出稽核报告 (Copy Report Text)</h3>
-                        <button onclick="document.getElementById('export-modal-overlay').remove()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">❌</button>
-                    </div>
-                    <p class="text-xs text-slate-500 mb-3">您已完成防霉数字化评估，可以点击下方复制报告文本保存或传输：</p>
-                    <textarea class="w-full flex-grow text-xs font-mono p-3 bg-slate-50 border border-slate-200 rounded-xl resize-none min-h-[300px]" readonly>${reportText}</textarea>
-                    <div class="flex justify-end gap-3 mt-4">
-                        <button onclick="copyToClipboard();" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-xs transition">
-                            📋 复制到剪切板 Copy
-                        </button>
-                        <button onclick="document.getElementById('export-modal-overlay').remove()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition">
-                            关闭 Close
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(exportModal);
-        }
-
-        // Clipboard copier helper
-        function copyToClipboard() {
-            const textarea = document.querySelector('#export-modal-overlay textarea');
-            textarea.select();
-            document.execCommand('copy');
-            showToast("📋 报告文本已复制！可以直接进行粘贴保存。");
         }
 
         window.onload = init;
