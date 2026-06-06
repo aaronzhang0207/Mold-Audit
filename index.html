@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVK anti-Mold Audit | EVK防霉数字化稽核系统</title>
+    <!-- CSS Style Framework -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Charting Engine -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS Spreadsheet Engine for importing/exporting Excel files on raw client-side -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         
@@ -47,6 +51,7 @@
         }
 
         .status-btn-active-p { background-color: #10b981 !important; color: white; border-color: #10b981; }
+        .status-btn-active-pr { background-color: #f59e0b !important; color: white; border-color: #f59e0b; }
         .status-btn-active-f { background-color: #ef4444 !important; color: white; border-color: #ef4444; }
         .status-btn-active-na { background-color: #64748b !important; color: white; border-color: #64748b; }
 
@@ -90,11 +95,22 @@
                 <span class="text-base md:text-lg font-bold tracking-tight uppercase flex items-center">
                     🛡️ EVK Mold Audit
                 </span>
-                <span class="text-[10px] md:text-xs text-slate-400">EVK数字化防霉稽核工作台 (EVK anti-Mold Audit)</span>
+                <span class="text-[10px] md:text-xs text-slate-400">EVK数字化防霉稽核工作台</span>
             </div>
-            <div class="flex items-center">
-                <button onclick="triggerPrint()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
-                    🖨️ 打印全部 Print All / បោះពុម្ព
+            <div class="flex items-center gap-2">
+                <!-- Language switcher placed nicely beside print button -->
+                <div class="relative flex items-center bg-slate-800 rounded-xl px-2.5 py-1.5 text-white border border-slate-700 shadow-inner">
+                    <span class="text-[10px] font-bold text-slate-400 mr-2 uppercase hidden sm:inline">🌐 语言 / Lang:</span>
+                    <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer pr-1">
+                        <option value="tri" class="bg-slate-900 text-white">🌐 三语 Trilingual</option>
+                        <option value="cn" class="bg-slate-900 text-white">🇨🇳 中文 CN</option>
+                        <option value="en" class="bg-slate-900 text-white">🇬🇧 English EN</option>
+                        <option value="kh" class="bg-slate-900 text-white">🇰🇭 ភាសាខ្មែរ KH</option>
+                    </select>
+                </div>
+                <!-- Print All Button -->
+                <button onclick="triggerPrint()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-lg">
+                    🖨️ 打印报告 Print Report
                 </button>
             </div>
         </div>
@@ -105,11 +121,11 @@
         <!-- Header Section -->
         <header class="mb-6 text-center bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-1">EVK Mold Audit</h1>
-            <p class="text-sm text-slate-500 max-w-2xl mx-auto italic mb-3">
+            <p id="system-subtitle" class="text-sm text-slate-500 max-w-2xl mx-auto italic mb-3">
                 EVK数字防霉稽核系统 | EVK Anti-Mold Audit Standard (CN / EN / KH)
             </p>
             <div class="text-xs text-slate-400 font-medium border-t border-dashed border-slate-200 pt-2 inline-block px-4">
-                📋 支持实地拍照 | 包含判定细则 collapsible panels
+                📊 评分制: PASS = 1.0分 | PARTIAL = 0.5分 | FAIL = 0分 | 支持单语精简与三语对照
             </div>
         </header>
 
@@ -142,11 +158,11 @@
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between relative">
                     <div>
                         <h2 class="text-base font-bold text-slate-800 flex justify-between items-center">
-                            <span>📊 总体合规率 (Compliance Score)</span>
+                            <span>📊 总体合规得分 (Compliance Score)</span>
                             <span id="overall-score-display" class="text-blue-600 text-lg font-extrabold">0.0%</span>
                         </h2>
                         <p class="text-[11px] text-slate-400 mb-4 mt-1">
-                            百分比代表合格率（PASS/总评估数，不含N/A）。ពិន្ទុគិតជាភាគរយ។
+                            计分权重: PASS = 1分，PARTIAL = 0.5分，FAIL = 0分，不计N/A。
                         </p>
                     </div>
                     <div class="chart-container relative">
@@ -154,7 +170,7 @@
                         <!-- Center text overlay -->
                         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style="top: 25px;">
                             <span id="center-percent-text" class="text-2xl font-extrabold text-slate-800">0.0%</span>
-                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">合规 Compliance</span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">得分 Score</span>
                         </div>
                     </div>
                 </div>
@@ -163,10 +179,10 @@
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col justify-between">
                     <div>
                         <h2 class="text-base font-bold text-slate-800">
-                            🏢 各区域合规对比 (Section Performance %)
+                            🏢 各区域合规得分对比 (Section Performance Score %)
                         </h2>
                         <p class="text-[11px] text-slate-400 mb-4 mt-1">
-                            三大区域的合格率百分比对比。ការប្រៀបធៀបភាគរយតាមតំបន់។
+                            三大区域各自折算分数后的合规率表现。
                         </p>
                     </div>
                     <div class="chart-container">
@@ -203,6 +219,95 @@
 
     </main>
 
+    <!-- VISUAL COPYWRITING EDITOR MODAL (Hidden by default, no-print) -->
+    <div id="editor-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-5xl h-[85vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in duration-200">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shrink-0">
+                <div>
+                    <h2 class="text-sm md:text-base font-bold flex items-center gap-2">
+                        ✍️ EVK 防霉标准文案编辑器 (Trilingual Translation Editor)
+                    </h2>
+                    <p class="text-[10px] text-slate-400 mt-0.5">直接修改下方文本，或者通过Excel批量同步后，重新导出封装文件即可。</p>
+                </div>
+                <button onclick="closeEditorModal()" class="text-slate-400 hover:text-white text-lg font-bold p-1">&times;</button>
+            </div>
+
+            <!-- Modal Content (Split Screen) -->
+            <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
+                <!-- Left Sidebar: Selection of item to edit -->
+                <div class="w-full md:w-80 border-r border-slate-200 bg-slate-50 flex flex-col overflow-hidden">
+                    <div class="p-3 border-b border-slate-200">
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">🔍 搜索或选择条目 Filter Item:</label>
+                        <input type="text" id="editor-search" oninput="filterEditorItems()" placeholder="输入关键词搜索..." class="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    </div>
+                    <div id="editor-items-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                        <!-- Dynamic list of checkpoints grouped by section -->
+                    </div>
+                </div>
+
+                <!-- Right Form: Translating selected item -->
+                <div id="editor-form-pane" class="flex-1 overflow-y-auto p-6 bg-white space-y-4">
+                    <!-- Dynamic inputs loaded here -->
+                    <div class="text-center py-20 text-slate-400 text-xs">
+                        👈 请在左侧列表中选择一个项目开始编辑文案
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Actions) -->
+            <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
+                <div class="text-[10px] text-slate-500 text-center sm:text-left">
+                    💡 提示：编辑后数据实时保存在浏览器内存。可以通过以下按钮保存更新后的整份网页代码。
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="copyRawJSON()" class="flex-1 sm:flex-initial bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
+                        📋 复制 JS 数据块
+                    </button>
+                    <button onclick="downloadUpdatedHTML()" class="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-md">
+                        📥 下载全新 HTML 网页
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden native triggers for file uploads -->
+    <input type="file" id="excel-import-file" accept=".xlsx, .xls" class="hidden" onchange="importFromExcel(event)" />
+
+    <!-- ⚙️ ULTRA COMPACT SYSTEM ADMIN FOOTER TRIGGER -->
+    <section class="text-center no-print mt-6 mb-2">
+        <button onclick="toggleAdminPanel()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-slate-400 hover:text-slate-600 transition bg-slate-100 hover:bg-slate-200/80 rounded-full border border-slate-200 shadow-sm">
+            <span>⚙️ 稽核设置与同步 Admin Console</span>
+        </button>
+        <!-- Expanded Area inside a hidden absolute drawer styled minimal block -->
+        <div id="admin-panel-content" class="hidden max-w-md mx-auto mt-3 p-4 bg-white rounded-2xl border border-slate-200 shadow-lg text-left animate-in slide-in-from-bottom-2 duration-150">
+            <h4 class="font-bold text-slate-800 text-[11px] mb-2 uppercase border-b border-slate-100 pb-1 flex justify-between items-center">
+                <span>⚙️ 管理控制台</span>
+                <button onclick="toggleAdminPanel()" class="text-slate-400 hover:text-slate-600">&times;</button>
+            </h4>
+            <div class="space-y-3 text-[11px]">
+                <div class="p-2 bg-slate-50 rounded-xl space-y-1">
+                    <p class="font-bold text-slate-700">✍️ 现场文案编辑器 (Trilingual Translation)</p>
+                    <button onclick="openEditorModal()" class="w-full py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg transition text-[10px]">
+                        打开可视化编辑器
+                    </button>
+                </div>
+                <div class="p-2 bg-slate-50 rounded-xl space-y-1.5">
+                    <p class="font-bold text-slate-700">🔄 Excel 离线标准文件双向同步</p>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button onclick="exportToExcel()" class="py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition text-[10px]">
+                            📥 导出 Excel
+                        </button>
+                        <button onclick="document.getElementById('excel-import-file').click()" class="py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition text-[10px]">
+                            📤 导入 Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- PRINT-ONLY LAYOUT (Generates a beautifully structured table of ALL items in all sections) -->
     <div id="print-layout" class="hidden print-only p-8 max-w-[1000px] mx-auto">
         <div class="text-center mb-6 border-b-2 border-slate-900 pb-4">
@@ -215,7 +320,7 @@
             <div>👤 <strong>稽核员 Auditor:</strong> <span id="print-auditor">--</span></div>
             <div>📅 <strong>稽核日期 Date:</strong> <span id="print-date">--</span></div>
             <div>📈 <strong>上次得分 Last Score:</strong> <span id="print-last-score">--</span></div>
-            <div>📊 <strong>本次合规率 Current Score:</strong> <span id="print-score">0.0%</span></div>
+            <div>📊 <strong>本次合规得分 Current Score:</strong> <span id="print-score">0.0%</span></div>
         </div>
 
         <!-- Print sections injected dynamic here -->
@@ -235,7 +340,7 @@
         </div>
     </div>
 
-    <footer class="bg-slate-950 py-10 border-t border-slate-800 text-slate-400 mt-12 no-print">
+    <footer class="bg-slate-950 py-10 border-t border-slate-800 text-slate-400 mt-6 no-print">
         <div class="container mx-auto px-4 text-center text-xs space-y-3">
             <p class="text-sm font-semibold tracking-wide text-slate-300">EVK anti-Mold Audit EVK防霉稽核</p>
             <p>Anti-Mold Prevention System</p>
@@ -249,7 +354,8 @@
     </footer>
 
     <script>
-        // Expanded Dataset to 3 Major Sections with collapsible "Fully Meet" and "Do Not Meet" (Trilingual!)
+        // Use special markers to let the self-updating program find this object when downloading
+        /*START_AUDIT_DATA*/
         const auditData = {
             sections: [
                 {
@@ -269,10 +375,13 @@
                             comments: "",
                             fully_cn: "1) 建筑物内外部无渗漏、积水或水损迹象。\n2) 地板、屋顶、墙壁等清洁干燥，无可见潮气、起霜或霉菌。",
                             fully_en: "1) Building (inside/out) free of leaks, pooling or water damage.\n2) Floors, roof, walls are dry, clean, without visible dampness, blooming or mold.",
-                            fully_kh: "១) គ្មានការលេចធ្លាយទឹក ជ្រាបទឹក ឬដក់ទឹកនៅក្នុងនិងក្រៅអគារ។\n២) កម្រាលឥដ្ឋ ពិដាន ជញ្ជាំងស្អាត ស្ងួត គ្មានសំណើម ឬដុះផ្សិតឡើយ។",
+                            fully_kh: "១) គ្មានការលេចធ្លាយទឹក ជ្រាបទឹក ឬដក់ទឹកនៅក្នុងនិងក្រៅអគារ。\n២) កម្រាលឥដ្ឋ ពិដាន ជញ្ជាំងស្អាត ស្ងួត គ្មានសំណើម ឬដុះផ្សិតឡើយ។",
+                            partially_cn: "1) 发现极轻微的潮气或冷凝水，但无漏水、大面积受潮或发霉现象。\n2) 已安排临时排潮或干燥措施。",
+                            partially_en: "1) Very minor dampness or condensation observed, but no active leaking, soaking, or mold.\n2) Temporary ventilation/drying measures already scheduled.",
+                            partially_kh: "១) សង្កេតឃើញសំណើម ឬចំហាយទឹកតិចតួច ប៉ុន្តែគ្មានការលេចធ្លាយ ឬកើតផ្សិតឡើយ។\n២) បានចាត់ចែងវិធានការដោះស្រាយជាបណ្តោះអាសន្ន។",
                             not_cn: "1) 建筑存在漏水、积水、局部或大面积受潮。\n2) 地面或墙壁有肉眼可见霉斑、发黑或起霜。",
                             not_en: "1) Building has active leaks, water pooling, or dampness.\n2) Floors or walls show visible mold, black spots, or blooming.",
-                            not_kh: "១) មានការលេចធ្លាយទឹក ការដក់ទឹក ឬសើម។\n២) កម្រាលឥដ្ឋ ឬជញ្ជាំងមានដុះផ្សិត ស្នាមខ្មៅ ឬស្នាមអំបិល។"
+                            not_kh: "១) មានការលេចធ្លាយទឹក ការដក់ទឹក ឬសើម。\n២) កម្រាលឥដ្ឋ ឬជញ្ជាំងមានដុះផ្សិត ស្នាមខ្មៅ ឬស្នាមអំបិល។"
                         },
                         { 
                             id: "1.2", 
@@ -284,10 +393,13 @@
                             comments: "",
                             fully_cn: "1) 拥有明确的每日环境清洁计划，责任落实到具体员工。\n2) 包含除尘与死角消毒计划，并留存每日核对表记录备查。",
                             fully_en: "1) Clear daily cleaning schedule assigned to specific staff.\n2) Focuses on dust removal, dead angle sanitization, with signed checklists on file.",
-                            fully_kh: "១) មានផែនការអនាម័យប្រចាំថ្ងៃច្បាស់លាស់ដល់បុគ្គលិកជាក់លាក់។\n២) ផ្តោតលើការលុបធូលី សម្លាប់មេរោគតាមកន្លែងចង្អៀត ដោយមានតារាងកំណត់ត្រា។",
+                            fully_kh: "១) មានផែនការអនាម័យប្រចាំថ្ងៃច្បាស់លាស់ដល់បុគ្គលិកជាក់លាក់。\n២) ផ្តោតលើការលុបធូលី សម្លាប់មេរោគតាមកន្លែងចង្អៀត ដោយមានតារាងកំណត់ត្រា។",
+                            partially_cn: "1) 制定了清洁计划，但现场死角（如角落、风机等）仍有少量灰尘蓄积。\n2) 记录有时存在遗漏补签现象。",
+                            partially_en: "1) Cleaning schedule exists, but minor dust accumulation is visible in hard-to-reach dead corners.\n2) Recording logs show occasional missing entries or late sign-offs.",
+                            partially_kh: "១) មានផែនការអនាម័យ ប៉ុន្តែនៅតាមកន្លែងចង្អៀតខ្លះនៅមានធូលីតិចតួច។\n២) កំណត់ត្រាមិនទាន់បានចុះហត្ថលេខាពេញលេញ។",
                             not_cn: "1) 未建立每日清洁计划，或执行流于形式。\n2) 厂房角落、风机处存在严重积尘或垃圾堆积，无清洁记录。",
                             not_en: "1) No daily schedule exists, or execution is irregular.\n2) Dust/rubbish accumulated in corners, vents, with no logs.",
-                            not_kh: "១) គ្មានផែនការអនាម័យប្រចាំថ្ងៃ ឬការអនុវត្តមិនទៀងទាត់។\n២) មានធូលី និងកាកសំណល់គរទុកតាមជ្រុង ឬប្រព័ន្ធខ្យល់ ដោយគ្មានកំណត់ត្រា។"
+                            not_kh: "១) គ្មានផែនការអនាម័យប្រចាំថ្ងៃ ឬការអនុវត្តមិនទៀងទាត់。\n២) 有ធូលី និងកាកសំណល់គរទុកតាមជ្រុង ឬប្រព័ន្ធខ្យល់ ដោយគ្មានកំណត់ត្រា។"
                         },
                         { 
                             id: "1.3", 
@@ -300,9 +412,12 @@
                             fully_cn: "1) 划定专门的员工饮水与进餐区，生产现场禁止饮食。\n2) 现场张贴醒目的禁食警示牌，无外露垃圾桶堆放食物残渣。",
                             fully_en: "1) Defined drinking and eating areas with clear markings, no food/drink on line.\n2) Visible warning signs posted, no open trash bins with organic waste.",
                             fully_kh: "១) កំណត់កន្លែងញ៉ាំទឹក និងអាហារច្បាស់លាស់ ហាមឃាត់ដាច់ខាតនៅលើខ្សែសង្វាក់។\n២) មានបិទផ្លាកសញ្ញាហាមឃាត់ គ្មានធុងសំរាមចំហរដាក់សំណល់អាហារ។",
+                            partially_cn: "1) 现场有员工携带瓶装纯净水进入，但严禁带糖饮料和食物。\n2) 垃圾桶有少量生活废纸，但无机食物残渣。",
+                            partially_en: "1) Bottled plain water found on active lines, but zero tolerance on sugary drinks or foodstuffs.\n2) Bins contain paper waste but no organic food residues.",
+                            partially_kh: "១) ឃើញមានទឹកបរិសុទ្ធដបនៅលើខ្សែសង្វាក់ ប៉ុន្តែគ្មានភេសជ្ជៈផ្អែម ឬអាហារឡើយ។\n២) ធុងសំរាមមានក្រដាសខ្លះ ប៉ុន្តែគ្មានកាកសំណល់អាហារ។",
                             not_cn: "1) 允许员工在工位吃饭、饮用带糖饮料，在制品旁有食物残留。\n2) 现场积压易腐烂有机垃圾未及时清运。",
                             not_en: "1) Workers eat/drink at workstation; food residues near products.\n2) Organic waste is left in workshops without timely disposal.",
-                            not_kh: "១) កម្មករហូបចុកនៅកន្លែងធ្វើការ មានសំណល់អាហារនៅក្បែរទំនិញ។\n២) កាកសំណល់សរីរាង្គត្រូវបានទុកចោលក្នុងរោងចក្រដោយមិនបានប្រមូលចេញ។"
+                            not_kh: "១) កម្មករហូបចុកនៅកន្លែងធ្វើការ មានសំណល់អាហារនៅក្បែរទំនិញ。\n២) កាកសំណល់សរីរាង្គត្រូវបានទុកចោលក្នុងរោងចក្រដោយមិនបានប្រមូលចេញ។"
                         },
                         { 
                             id: "1.4", 
@@ -314,10 +429,13 @@
                             comments: "",
                             fully_cn: "1) 洗手池旁或车间入口配备足量且功能正常的免洗消毒液。\n2) 墙面张贴图文并茂的中英柬三语洗手与防霉规范（SOP）。",
                             fully_en: "1) Sufficient hand sanitizers provided near sinks/entrances.\n2) Visual poster of trilingual SOP (CN/EN/KH) for hand disinfection posted.",
-                            fully_kh: "១) មានទឹកលាងដៃសម្លាប់មេរោគគ្រប់គ្រាន់នៅក្បែរកន្លែងលាងដៃ/ច្រកចូល។\n២) មានបិទបង្ហាញ SOP ជារូបភាពជាបីភាសា (ចិន/អង់គ្លេស/ខ្មែរ)។",
+                            fully_kh: "១) មានទឹកលាងដៃសម្លាប់មេរោគគ្រប់គ្រាន់នៅក្បែរកន្លែងលាងដៃ/ច្រកចូល。\n២) មានបិទបង្ហាញ SOP ជារូបភាពជាបីភាសា (ចិន/អង់គ្លេស/ខ្មែរ)។",
+                            partially_cn: "1) 配备了免洗消毒液，但其中少部分储量不足未及时添加。\n2) 墙面张贴了说明，但缺乏某一语种（如柬文）。",
+                            partially_en: "1) Dispensers available, but some are running low or near-empty.\n2) SOP is posted, but missing one language translation (e.g., Khmer).",
+                            partially_kh: "១) មានទឹកលាងដៃ ប៉ុន្តែដបខ្លះជិតអស់មិនទាន់បានថែម។\n២) មានបិទ SOP ប៉ុន្តែខ្វះខាតភាសាណាមួយ (ដូចជាភាសាខ្មែរ)។",
                             not_cn: "1) 无洗手液，或分配器空置、损坏。\n2) 无防霉消毒教育，员工不知道接触高风险材料前需要洗手。",
                             not_en: "1) No hand sanitizer, or dispensers are empty/broken.\n2) No SOP or education on hand sanitizing before handling materials.",
-                            not_kh: "១) គ្មានទឹកលាងដៃ ឬម៉ាស៊ីនចែកចាយទទេ/ខូច។\n២) គ្មាន SOP ឬការអប់រំអំពីការលាងសម្អាតដៃមុនពេលប៉ះពាល់វត្ថុធាតុដើម។"
+                            not_kh: "១) គ្មានទឹកលាងដៃ ឬម៉ាស៊ីនចែកចាយទទេ/ខូច。\n២) គ្មាន SOP ឬការអប់រំអំពីការលាងសម្អាតដៃមុនពេលប៉ះពាល់វត្ថុធាតុដើម។"
                         },
                         { 
                             id: "1.5", 
@@ -329,10 +447,13 @@
                             comments: "",
                             fully_cn: "1) 每年/每季开展针对各车间（仓储、车缝、包装）的防霉专项培训。\n2) 保留签到表、课件及培训照片等证明材料。",
                             fully_en: "1) Mold prevention training is held annually/quarterly for all sections.\n2) Training records, including signature lists, slides, and photos, are kept.",
-                            fully_kh: "១) ការបណ្តុះបណ្តាលការពារផ្សិតត្រូវបានធ្វើឡើងប្រចាំឆ្នាំ/ត្រីមាសសម្រាប់គ្រប់ផ្នែក។\n២) មានរក្សាទុកកំណត់ត្រាបណ្តុះបណ្តាល បញ្ជីវត្តមាន និងរូបថត។",
+                            fully_kh: "១) ការបណ្តុះបណ្តាលការពារផ្សិតត្រូវបានធ្វើឡើងប្រចាំឆ្នាំ/ត្រីមាសសម្រាប់គ្រប់ផ្នែក。\n២) មានរក្សាទុកកំណត់ត្រាបណ្តុះបណ្តាល បញ្ជីវត្តមាន និងរូបថត។",
+                            partially_cn: "1) 开展过培训，但部分近期入职的新员工尚未能提供完整的考核/签到记录。\n2) 培训课件不够细致完善。",
+                            partially_en: "1) Training was conducted, but some newly hired workers lack full assessment or attendance logs.\n2) Training materials are somewhat generic.",
+                            partially_kh: "១) មានការបណ្តុះបណ្តាល ប៉ុន្តែបុគ្គលិកថ្មីខ្លះមិនទាន់បានចូលរួមពេញលេញ។\n២) ឯកសារបណ្តុះបណ្តាលនៅមានភាពខ្វះខាតខ្លះ។",
                             not_cn: "1) 员工对现场防霉标准（如温湿度界限）不了解、未听过该标准。\n2) 厂方无法提供任何培训记录证据材料。",
                             not_en: "1) Workers are unaware of basic mold criteria or limits.\n2) Factory cannot provide any valid training logs or records.",
-                            not_kh: "១) បុគ្គលិកមិនបានដឹងពីដែនកំណត់ ឬស្តង់ដារការពារផ្សិត។\n២) រោងចក្រមិនអាចផ្តល់ឯកសារឬកំណត់ត្រាបណ្តុះបណ្តាលបានឡើយ។"
+                            not_kh: "១) បុគ្គលិកមិនបានដឹងពីដែនកំណត់ ឬស្តង់ដារការពារផ្សិត。\n២) រោងចក្រមិនអាចផ្តល់ឯកសារឬកំណត់ត្រាបណ្តុះបណ្តាលបានឡើយ。"
                         },
                         { 
                             id: "1.6", 
@@ -344,10 +465,13 @@
                             comments: "",
                             fully_cn: "1) 每日在上午、下午等多个时间点测试并记录关键温湿度数据。\n2) 仓库和包装车间湿度始终控制在 60% 以下，并有异常响应机制。",
                             fully_en: "1) Multi-point daily logs (AM/PM) recorded for key areas.\n2) RH consistently maintained below 60% with documented actions for issues.",
-                            fully_kh: "១) កត់ត្រាទិន្នន័យសីតុណ្ហភាពនិងសំណើមប្រចាំថ្ងៃ (ព្រឹក/ល្ងាច) នៅតាមកន្លែងសំខាន់ៗ។\n២) សំណើមធៀប (RH) ស្ថិតនៅក្រោម ៦០% ជាប្រចាំ ដោយមានវិធានការដោះស្រាយ។",
+                            fully_kh: "១) កត់ត្រាទិន្នន័យសីតុណ្ហភាពនិងសំណើមប្រចាំថ្ងៃ (ព្រឹក/ល្ងាច) នៅតាមកន្លែងសំខាន់ៗ。 \n២) សំណើមធៀប (RH) ស្ថិតនៅក្រោម ៦០% ជាប្រចាំ ដោយមានវិដានការដោះស្រាយ។",
+                            partially_cn: "1) 每日定时监控并留有记录，但在极个别极度潮湿的时段RH短时超过60%（最高小于65%）。\n2) 已启动临时抽湿应对，且记录表填写完整。",
+                            partially_en: "1) Logs are maintained daily, but RH occasionally spikes to 60-65% briefly during high-humidity periods.\n2) Corrective actions (extra dehumidifiers) are actively deployed.",
+                            partially_kh: "១) មានការវាស់និងកត់ត្រាប្រចាំថ្ងៃ ប៉ុន្តែសំណើមឡើងខ្ពស់ខ្លះពេលមេឃភ្លៀង (៦០-៦៥%)។\n២) មានការចាត់វិធានការដោះស្រាយសកម្ម។",
                             not_cn: "1) 未进行监控、无记录表，或记录表存在明显“人工补填”造假迹象。\n2) 空气潮湿时湿度长时间超过 60% 且无任何降湿应对措施。",
                             not_en: "1) No records, or logs show signs of fabrication/pre-filling.\n2) RH exceeds 60% for long periods with no dehumidification actions.",
-                            not_kh: "១) គ្មានការត្រួតពិនិត្យ គ្មានកំណត់ត្រា ឬកំណត់ត្រាមានសញ្ញាក្លែងបន្លំ។\n២) សំណើមធៀបលើសពី ៦០% រយៈពេលយូរដោយគ្មានការដោះស្រាយ។"
+                            not_kh: "១) គ្មានការត្រួតពិនិត្យ គ្មានកំណត់ត្រា ឬកំណត់ត្រាមានសញ្ញាក្លែងបន្លំ។\n២) សំណើមធៀបលើសពី ៦០% រយៈពេលយូរដោយគ្មានការដោះស្រាយ。"
                         },
                         { 
                             id: "1.7", 
@@ -359,10 +483,13 @@
                             comments: "",
                             fully_cn: "1) 所有湿度计、含水率仪定期送往第三方机构校准，或内部按标准液/标准块校验。\n2) 仪器机身贴有清晰、有效的绿色合格/校准标签。",
                             fully_en: "1) All hygrometers and moisture meters calibrated externally/internally.\n2) Equipment labeled with valid calibration stickers indicating due dates.",
-                            fully_kh: "១) ឧបករណ៍វាស់សំណើមទាំងអស់ត្រូវបានក្រិតតាមខ្នាតជាទៀងទាត់។\n២) មានបិទផ្លាកសញ្ញាបញ្ជាក់ការក្រិតតាមខ្នាតត្រឹមត្រូវជាមួយនឹងកាលបរិច្ឆេទ។",
+                            fully_kh: "១) ឧបករណ៍វាស់សំណើមទាំងអស់ត្រូវបានក្រិតតាមខ្នាតជាទៀងទាត់。\n២) មានបិទផ្លាកសញ្ញាបញ្ជាក់ការក្រិតតាមខ្នាតត្រឹមត្រូវជាមួយនឹងកាលបរិច្ឆេទ។",
+                            partially_cn: "1) 仪器功能完全正常，且具备近期的内部比对/校准记录，但部分仪器机身的“校准标签”发生起翘、字迹模糊或磨损。",
+                            partially_en: "1) Devices are functional with active verification records, but physical labels on some meters are worn-out, peeling, or illegible.",
+                            partially_kh: "១) ឧបករណ៍ដំណើរការល្អ និងមានកំណត់ត្រាវាស់វែង ប៉ុន្តែផ្លាកសញ្ញាខ្លះរហែក ឬមើលមិនច្បាស់។",
                             not_cn: "1) 设备老化、读数异常，无法提供有效校准报告。\n2) 仪器未贴标签或标签已过期数月。",
                             not_en: "1) Equipment is faulty/uncalibrated with no verification certificate.\n2) Instruments lack labels, or calibration status has expired.",
-                            not_kh: "១) ឧបករណ៍ខូចខាត ឬមិនបានក្រិតតាមខ្នាត ដោយគ្មានវិញ្ញាបនបត្រ។\n២) ឧបករណ៍គ្មានផ្លាកសញ្ញា ឬហួសសុពលភាពកំណត់។"
+                            not_kh: "១) ឧបករណ៍ខូចខាត ឬមិនបានក្រិតតាមខ្នាត ដោយគ្មានវិញ្ញាបនបត្រ。\n២) ឧបករណ៍គ្មានផ្លាកសញ្ញា ឬហួសសុពលភាពកំណត់។"
                         },
                         { 
                             id: "1.8", 
@@ -374,10 +501,13 @@
                             comments: "",
                             fully_cn: "1) 与专业虫害消杀及防霉服务商签约，定期对厂区全覆盖喷洒消杀。\n2) 厂区各死角有鼠饵站布局图，消杀报告完备并存档。",
                             fully_en: "1) Contracted professional services for regular pest control and disinfection.\n2) Bait stations mapped correctly, with complete vendor reports filed.",
-                            fully_kh: "១) មានកិច្ចសន្យាជាមួយក្រុមហ៊ុនវិជ្ជាជីវៈដើម្បីកំចាត់សត្វល្អិត និងសម្លាប់មេរោគ។\n២) មានប្លង់ដាក់ប្រអប់នុយសត្វកណ្តុរ និងមានរបាយការណ៍ច្បាស់លាស់។",
+                            fully_kh: "១) មានកិច្ចសន្យាជាមួយក្រុមហ៊ុនវិជ្ជាជីវៈដើម្បីកំចាត់សត្វល្អិត និងសម្លាប់មេរោគ。 \n២) មានប្លង់ដាក់ប្រអប់នុយសត្វកណ្តុរ និងមានរបាយការណ៍ច្បាស់លាស់។",
+                            partially_cn: "1) 具备消杀计划与执行记录，但最近一次的服务报告中，部分死角或室外诱饵盒的检查缺失记录不完备。",
+                            partially_en: "1) Program is executed, but logs for specific perimeter bait stations are incomplete in the latest service report.",
+                            partially_kh: "១) មានការបាញ់ថ្នាំសម្លាប់មេរោគ ប៉ុន្តែកំណត់ត្រាប្រអប់នុយសត្វកណ្តុរនៅខាងក្រៅមិនទាន់គ្រប់គ្រាន់។",
                             not_cn: "1) 现场发现大批死昆虫、鼠粪或蛛网，无任何消杀计划。\n2) 无法提供杀虫/防霉服务报告记录。",
                             not_en: "1) Insects, droppings, or thick webs found on site; no control plan.\n2) Missing service agreements, logs, or pesticide chemical list.",
-                            not_kh: "១) ឃើញមានសត្វល្អិត លាមកសត្វ ឬស្បៃមងលើយន្តហោះ ដោយគ្មានផែនការកំចាត់។\n២) គ្មានរបាយការណ៍សេវាកម្ម ឬកំណត់ត្រាកំចាត់សត្វល្អិត។"
+                            not_kh: "១) ឃើញមានសត្វល្អិត លាមកសត្វ ឬស្បៃមងលើយន្តហោះ ដោយគ្មានផែនការកំចាត់。 \n២) គ្មានរបាយការណ៍សេវាកម្ម ឬកំណត់ត្រាកំចាត់សត្វល្អិត。"
                         },
                         { 
                             id: "1.9", 
@@ -389,10 +519,13 @@
                             comments: "",
                             fully_cn: "1) 车间所有垃圾桶配备脚踏式或摇盖式封闭盖子。\n2) 清洁工每天下班前对车间垃圾进行彻底清理出厂，不在车间过夜。",
                             fully_en: "1) All bins inside workshop are covered with tightly fitted/foot-pedal lids.\n2) Workshop waste cleared fully before the end of each shift, no overnight storage.",
-                            fully_kh: "១) ធុងសំរាមទាំងអស់មានគម្របបិទជិត ឬប្រើជើងជាន់។\n២) សំរាមក្នុងរោងចក្រត្រូវបានសំអាតចេញអស់រៀងរាល់ថ្ងៃ មិនទុកឱ្យឆ្លងយប់។",
+                            fully_kh: "១) ធុងសំរាមទាំងអស់មានគម្របបិទជិត ឬប្រើជើងជាន់。 \n២) សំរាមក្នុងរោងចក្រត្រូវបានសំអាតចេញអស់រៀងរាល់ថ្ងៃ មិនទុកឱ្យឆ្លងយប់។",
+                            partially_cn: "1) 绝大部分垃圾桶均已带盖，但存在个别垃圾桶在扔垃圾时短暂开盖未闭合。\n2) 垃圾清理及时，无过夜积压。",
+                            partially_en: "1) Most bins are covered, but a few lids are temporarily left open during work. \n2) Cleared daily as scheduled.",
+                            partially_kh: "១) ធុងសំរាមភាគច្រើនមានគម្រប ប៉ុន្តែមានខ្លះបើកចំហរជាបណ្តោះអាសន្នក្នុងម៉ោងធ្វើការ។\n២) ការប្រមូលចេញបានធ្វើឡើងជាប្រចាំរាល់ថ្ងៃ។",
                             not_cn: "1) 垃圾桶敞口，散发异味甚至生虫。\n2) 大量生活或生产废料在车间内堆积数天无人过问。",
                             not_en: "1) Trash bins left open, creating strong odors or attracting insects.\n2) Bulky garbage pile-up in work areas for several days.",
-                            not_kh: "១) ធុងសំរាមបើកចំហរ បង្កក្លិនស្អុយ ឬទាក់ទាញសត្វល្អិត។\n២) សំណល់អាហារ ឬកាកសំណល់ផលិតកម្មត្រូវបានទុកគរជាច្រើនថ្ងៃ។"
+                            not_kh: "១) ធុងសំរាមបើកចំហរ បង្កក្លិនស្អុយ ឬទាក់ទាញសត្វល្អិត。 \n២) សំណល់អាហារ ឬកាកសំណល់制造កម្មត្រូវបានទុកគរជាច្រើនថ្ងៃ。"
                         },
                         { 
                             id: "1.10", 
@@ -404,10 +537,13 @@
                             comments: "",
                             fully_cn: "1) 品质或厂长每月带队进行防霉隐患排查（包括死角、管网、屋顶）。\n2) 针对发现问题，记录不符合项，制定整改（CAPA）方案并跟踪结案。",
                             fully_en: "1) Quality team/factory head leads monthly walk-through inspections.\n2) Action plans (CAPA) are recorded, assigned, tracked, and closed with photos.",
-                            fully_kh: "១) ក្រុមការងារគុណភាពចុះត្រួតពិនិត្យស្វែងរកហានិភ័យផ្សិតរៀងរាល់ខែ។\n២) រាល់បញ្ហាត្រូវបានកត់ត្រា និងមានវិធានការកែតម្រូវច្បាស់លាស់។",
+                            fully_kh: "១) ក្រុមការងារគុណភាពចុះត្រួតពិនិត្យស្វែងរកហានិភ័យផ្សិតរៀងរាល់ខែ。 \n២) រាល់បញ្ហាត្រូវបានកត់ត្រា និងមានវិធានការកែតម្រូវច្បាស់លាស់។",
+                            partially_cn: "1) 开展了走访排查并有记录，但整改措施（CAPA）实施有些许延迟，未能在承诺期限内彻底关闭结案。",
+                            partially_en: "1) Inspections are performed, but corrective actions (CAPA) are slightly delayed and not formally closed in writing within target deadlines.",
+                            partially_kh: "១) មានការចុះពិនិត្យ ប៉ុន្តែការដោះស្រាយបញ្ហានៅមានភាពយឺតយ៉ាវបន្តិចបន្តួច។",
                             not_cn: "1) 没有任何内部排查机制，防霉处于盲目状态。\n2) 发现缺陷后口头敷衍，无任何书面跟进及整改反馈方案。",
                             not_en: "1) No internal audits or checkups performed.\n2) Deficiencies are noted but ignored, with no written corrective action plan.",
-                            not_kh: "១) គ្មានការត្រួតពិនិត្យផ្ទៃក្នុងទាល់តែសោះ។\n២) ឃើញមានបញ្ហាកើតឡើងតែគ្មានកំណត់ត្រា ឬដំណោះស្រាយជាលាយលក្ខណ៍អក្សរ។"
+                            not_kh: "១) គ្មានការត្រួតពិនិត្យផ្ទៃក្នុងទាល់តែសោះ។ \n២) ឃើញមានបញ្ហាកើតឡើងតែគ្មានកំណត់ត្រា ឬដំណោះស្រាយជាលាយលក្ខណ៍អក្សរ。"
                         },
                         { 
                             id: "1.11", 
@@ -419,10 +555,13 @@
                             comments: "",
                             fully_cn: "1) 空调滤网、排气扇叶轮定期擦洗无厚重积尘。\n2) 新风系统运行良好，空气流通顺畅，空调制冷无漏水或滴水危险。",
                             fully_en: "1) Exhaust fans, window vents, AC filters cleaned regularly without dust build-up.\n2) Good airflow, no air blockages, no condensation dripping from AC units.",
-                            fully_kh: "១) កង្ហារស្រូបខ្យល់ បង្អួច ស្រទាប់ម៉ាស៊ីនត្រជាក់ត្រូវបានសម្អាតជាប្រចាំ។\n២) ខ្យល់ចេញចូលល្អ គ្មានការស្ទះ និងគ្មានទឹកស្រក់ពីម៉ាស៊ីនត្រជាក់។",
+                            fully_kh: "១) កង្ហារស្រូបខ្យល់ បង្អួច ស្រទាប់ម៉ាស៊ីនត្រជាក់ត្រូវបានសម្អាតជាប្រចាំ。 \n២) ខ្យល់ចេញចូលល្អ គ្មានការស្ទះ និងគ្មានទឹកស្រក់ពីម៉ាស៊ីនត្រជាក់។",
+                            partially_cn: "1) 通风设备工作完全正常，但个别高位排风扇的外壳或边缘积有少量可见灰尘未及时抹除。",
+                            partially_en: "1) Ventilation system works fine, but a few high-level exhaust fan casings show minor dust accumulation.",
+                            partially_kh: "១) ប្រព័ន្ធខ្យល់ដំណើរការល្អ ប៉ុន្តែតួខាងក្រៅកង្ហារខ្ពស់ៗខ្លះមានធូលីតិចតួចមិនទាន់បានជូត។",
                             not_cn: "1) 排风扇因污垢严重卡死或失效，车间闷热潮湿。\n2) 空调风口下方有冷凝水聚积滴落，正对物料区或成品。",
                             not_en: "1) Fans are non-functional, blocked by grime, causing stale/damp air.\n2) Condensation dripping from ducting directly over materials/cargo areas.",
-                            not_kh: "១) កង្ហារស្រូបខ្យល់ខូច ឬកកស្ទះដោយសារធូលី បង្កឱ្យហប់សំណើម។\n២) មានទឹកកកស្ទះស្រក់ចេញពីម៉ាស៊ីនត្រជាក់ចំពីលើវត្ថុធាតុដើម ឬទំនិញ។"
+                            not_kh: "១) កង្ហារស្រូបខ្យល់ខូច ឬកកស្ទះដោយសារធូលី បង្កឱ្យហប់សំណើម។ \n២) មានទឹកកកស្ទះស្រក់ចេញពីម៉ាស៊ីនត្រជាក់ចំពីលើវត្ថុធាតុដើម ឬទំនិញ。"
                         }
                     ]
                 },
@@ -443,10 +582,13 @@
                             comments: "",
                             fully_cn: "1) 现场货物离地、离墙及离窗距离测量全部符合标准（≥12cm, ≥60cm, ≥100cm）。\n2) 划定警示标线指示物料码放界限。",
                             fully_en: "1) Measured distances meet rules: off floor ≥12cm, off wall ≥60cm, off window ≥100cm.\n2) Demarcation lines clearly painted on floor to prevent incorrect positioning.",
-                            fully_kh: "១) រាល់ចម្ងាយត្រូវបានវាស់វែងត្រឹមត្រូវ៖ ពីដី ≥១២សង់ទីម៉ែត្រ ពីជញ្ជាំង ≥៦០សង់ទីម៉ែត្រ ពីបង្អួច ≥១០០សង់ទីម៉ែត្រ។\n២) មានគូសខ្សែបន្ទាត់ព្រំដែនច្បាស់លាស់នៅលើឥដ្ឋ។",
+                            fully_kh: "១) រាល់ចម្ងាយត្រូវបានវាស់វែងត្រឹមត្រូវ៖ ពីដី ≥១២សង់ទីម៉ែត្រ ពីជញ្ជាំង ≥៦០សង់ទីម៉ែត្រ ពីបង្អួច ≥១០០សង់ទីម៉ែត្រ។ \n២) មានគូសខ្សែបន្ទាត់ព្រំដែនច្បាស់លាស់នៅលើឥដ្ឋ។",
+                            partially_cn: "1) 100%货物离地和离窗达标，但少部分箱体边缘由于空间限制离墙距离在50-59cm之间，低于60cm限值，但未直接贴墙。",
+                            partially_en: "1) Off-floor and off-window criteria met, but due to space limits, some stacks are 50-59cm away from walls (slightly below 60cm but not touching).",
+                            partially_kh: "១) ទំនិញពីដីនិងបង្អួចត្រឹមត្រូវ ប៉ុន្តែចម្ងាយពីជញ្ជាំងខ្លះចន្លោះ ៥០-៥៩សង់ទីម៉ែត្រ (ខ្វះខាតបន្តិចបន្តួច)។",
                             not_cn: "1) 材料、包材堆放直接贴靠外墙，或直接接触潮湿地面。\n2) 纸箱堆放在窗户正下方，暴雨时易被溅湿。",
                             not_en: "1) Goods stored flush against outer walls or placed directly on floor.\n2) Cardboard cartons placed right under windows, high rain risk.",
-                            not_kh: "១) វត្ថុធាតុដើមរក្សាទុកផ្អែកនឹងជញ្ជាំង ឬដាក់ផ្ទាល់លើឥដ្ឋ។\n២) កាតុងដាក់នៅចំក្រោមបង្អួច ងាយរងទឹកភ្លៀងជះចូល។"
+                            not_kh: "១) វត្ថុធាតុដើមរក្សាទុកផ្អែកនឹងជញ្ជាំង ឬដាក់ផ្ទាល់លើឥដ្ឋ。 \n២) កាតុងដាក់នៅចំក្រោមបង្អួច ងាយរងទឹកភ្លៀងជះចូល។"
                         },
                         { 
                             id: "2.2", 
@@ -458,25 +600,31 @@
                             comments: "",
                             fully_cn: "1) 仓库中100%无任何木制卡板，全部替换为洁净环保的塑料或金属卡板。\n2) 有破损卡板及时清出更换，避免损坏物料包装。",
                             fully_en: "1) 100% wood pallet prohibition in effect, replaced completely by plastic/metal.\n2) Damaged pallets cleared immediately to protect material pack integrity.",
-                            fully_kh: "១) ហាមឃាត់ការប្រើប្រាស់បន្ទះក្តារឈើ ១០០% ជំនួសដោយបន្ទះជ័រ ឬលោហៈទាំងស្រុង។\n២) បន្ទះជ័រដែលបាក់បែកត្រូវបានដកចេញដើម្បីការពារការខូចខាត包材។",
+                            fully_kh: "១) ហាមឃាត់ការប្រើប្រាស់បន្ទះក្តារឈើ ១០០% ជំនួសដោយបន្ទះជ័រ ឬលោហៈទាំងស្រុង。 \n២) បន្ទះជ័រដែលបាក់បែកត្រូវបានដកចេញដើម្បីការពារការខូចខាត包材។",
+                            partially_cn: "1) 仓内100%无木质托盘。但在入库待验区临时放置了供应商带入的少量木卡板，尚未拆换，但已被醒目隔离。",
+                            partially_en: "1) Inside stacks are 100% plastic/metal. However, a few inbound supplier wooden pallets are temporarily held in the receiving area pending transfer.",
+                            partially_kh: "១) ក្នុងស្តុកប្រើបន្ទះជ័រទាំងអស់ ប៉ុន្តែតំបន់ទទួលទំនិញខាងក្រៅមានបន្ទះឈើខ្លះរង់ចាំការផ្ទេរ។",
                             not_cn: "1) 混用木制托盘堆放高风险包材，部分托盘有发霉发黑或受潮断裂迹象。\n2) 仓库外围大量废旧木卡板随意堆放，易引入虫害和真菌污染环境。",
                             not_en: "1) Wood pallets mixed with stock, showing visible rot, dampness or cracks.\n2) Pile of rotting wood pallets stored outside warehouse, high pest risk.",
-                            not_kh: "១) មានការលាយឡំប្រើបន្ទះឈើដែលមានសភាពពុក ឬខ្មៅដុះផ្សិត។\n២) បន្ទះឈើចាស់ៗគរទុកចោលនៅខាងក្រៅឃ្លាំង ងាយបង្កឱ្យមានសត្វល្អិត និងផ្សិត។"
+                            not_kh: "១) មានការលាយឡំប្រើបន្ទះឈើដែលមានសភាពពុក ឬខ្មៅដុះផ្សិត។ \n២) បន្ទះឈើចាស់ៗគរទុកចោលនៅខាងក្រៅឃ្លាំង ងាយបង្កឱ្យមានសត្វល្អិត និងផ្សិត។"
                         },
                         { 
                             id: "2.3", 
                             en: "Are industrial dehumidifiers active in the warehouse to ensure relative humidity (RH) is consistently kept under 60%?", 
-                            cn: "材料仓内是否配置工业除湿机且运行状态良好，在空气潮湿时及时开启保持湿度 < 60%？", 
+                            cn: "材料仓内是否配置工业除湿机且运行状态良好，在空气潮湿时开启以保持湿度 < 60%？", 
                             kh: "តើឃ្លាំងមានបំពាក់ម៉ាស៊ីនស្រូបសំណើមឧស្សាហកម្មដើម្បីធានាសំណើមធៀប (RH) ស្ថិតនៅក្រោម ៦០% ជាប្រចាំ?", 
                             status: 'P', 
                             photo: null, 
                             comments: "",
                             fully_cn: "1) 仓内配置与空间匹配的高效工业除湿机（带温湿度数显或自动启停）。\n2) 潮湿多雨季节实现24小时除潮运行，保障仓内空气干燥。",
                             fully_en: "1) Warehouse is equipped with industrial dehumidifiers matching the capacity.\n2) Operated 24/7 during wet seasons to maintain humidity strictly < 60% RH.",
-                            fully_kh: "១) មានបំពាក់ម៉ាស៊ីនស្រូបសំណើមឧស្សាហកម្មសមស្របទៅនឹងទំហំឃ្លាំង។\n២) ដំណើរការ ២៤ម៉ោងក្នុងរដូវភ្លៀងធ្លាក់ដើម្បីរក្សាសំណើម < ៦០% RH។",
+                            fully_kh: "១) មានបំពាក់ម៉ាស៊ីនស្រូបសំណើមឧស្សាហកម្មសមស្របទៅនឹងទំហំឃ្លាំង。 \n២) ដំណើរការ ២៤ម៉ោងក្នុងរដូវភ្លៀងធ្លាក់ដើម្បីរក្សាសំណើម < ៦០% RH។",
+                            partially_cn: "1) 工业除湿机配置充足，但点检中发现有一台由于滤网尘堵，抽湿效率降低导致周边湿度偏高（58%~61%），需当场清理。",
+                            partially_en: "1) Dehumidifiers are active, but one unit has a clogged filter, reducing efficiency and letting surrounding humidity drift slightly near 61%.",
+                            partially_kh: "១) ម៉ាស៊ីនស្រូបសំណើមដំណើរការ ប៉ុន្តែមានមួយគ្រឿងកខ្វក់ស្ទះស្រទាប់កាត់បន្ថយប្រសិទ្ធភាព។",
                             not_cn: "1) 无除湿设备，或设备断电故障数周未修理。\n2) 雨天时大开窗户，使室外潮湿空气涌入，未开机抽湿。",
                             not_en: "1) Dehumidifiers are absent or broken down with no work orders.\n2) Windows left wide open during heavy rain without active extraction.",
-                            not_kh: "១) គ្មានម៉ាស៊ីនស្រូបសំណើម ឬម៉ាស៊ីនខូចខាតជាច្រើនសប្តាហ៍មិនបានជួសជុល។\n២) បើកបង្អួចចំហរពេលមេឃភ្លៀង បណ្តាលឱ្យសំណើមចូលមកក្នុងឃ្លាំង។"
+                            not_kh: "១) គ្មានម៉ាស៊ីនស្រូបសំណើម ឬម៉ាស៊ីនខូចខាតជាច្រើនសប្តាហ៍មិនបានជួសជុល。 \n២) បើកបង្អួចចំហរពេលមេឃភ្លៀង បណ្តាលឱ្យសំណើមចូលមកក្នុងឃ្លាំង。"
                         },
                         { 
                             id: "2.4", 
@@ -488,10 +636,13 @@
                             comments: "",
                             fully_cn: "1) 库位物料有明显的收发卡、批次标签，并建立先进先出控制程序。\n2) 针对超期存货，有再检验含水率合格后才能发料的流程。",
                             fully_en: "1) Batch labels and bin cards indicate arrival date to enforce FIFO control.\n2) Standard re-inspection program (moisture check) for long-stored materials.",
-                            fully_kh: "១) មានបិទកាតព័ត៌មាន បង្ហាញកាលបរិច្ឆេទចូលស្តុកដើម្បីអនុវត្ត FIFO។\n២) មានការត្រួតពិនិត្យឡើងវិញ (វាស់សំណើម) សម្រាប់វត្ថុធាតុដើមដែលរក្សាទុកយូរ។",
+                            fully_kh: "១) មានបិទកាតព័ត៌មាន បង្ហាញកាលបរិច្ឆេទចូលស្តុកដើម្បីអនុវត្ត FIFO។ \n២) មានការត្រួតពិនិត្យឡើងវិញ (វាស់សំណើម) សម្រាប់វត្ថុធាតុដើមដែលរក្សាទុកយូរ។",
+                            partially_cn: "1) 建立了先进先出制度且挂有物料卡，但卡上的日期书写不及时，存在部分滞后补充的痕迹。",
+                            partially_en: "1) FIFO is established and bin cards are hung, but hand-written entries on cards are slightly delayed or back-filled.",
+                            partially_kh: "១) មានប្រព័ន្ធ FIFO និងមានកាតព័ត៌មាន ប៉ុន្តែការសរសេរព័ត៌មានខ្លះមានភាពយឺតយ៉ាវ។",
                             not_cn: "1) 现场码放混乱，后进物料挡住先进物料，部分物料已在库中吸收潮气变质。\n2) 发料无章法，全凭随意抓取，缺乏批次管理手段。",
                             not_en: "1) Messy stacking blocks older batches, causing materials to age and absorb moisture.\n2) Picking is chaotic with no batch control or traceability.",
-                            not_kh: "១) ការរៀបចំគរទុកគ្មានសណ្តាប់ធ្នាប់ នាំឱ្យវត្ថុធាតុដើមចាស់ៗនៅខាងក្រោមហប់សំណើម។\n២) ការបញ្ចេញទំនិញគ្មានការគ្រប់គ្រងតាមបាច់ ឬតាមកាលបរិច្ឆេទច្បាស់លាស់។"
+                            not_kh: "១) ការរៀបចំគរទុកគ្មានសណ្តាប់ធ្នាប់ នាំឱ្យវត្ថុធាតុដើមចាស់ៗនៅខាងក្រោមហប់សំណើម。 \n២) ការបញ្ចេញទំនិញគ្មានការគ្រប់គ្រងតាមបាច់ ឬតាមកាលបរិច្ឆេទច្បាស់លាស់។"
                         },
                         { 
                             id: "2.5", 
@@ -503,10 +654,13 @@
                             comments: "",
                             fully_cn: "1) IQC人员手持快速水分测试仪对到厂的纸箱、包材及高危辅料逐批抽查水分。\n2) 纸箱含水率控制在 12% 以下（或品牌规定），合格后放行并做书面登记。",
                             fully_en: "1) IQC uses handheld moisture meters to test incoming cartons/packaging.\n2) Carton moisture strictly < 12% (or brand standard), documented in incoming log.",
-                            fully_kh: "១) IQC ប្រើឧបករណ៍វាស់សំណើមដើម្បីវាស់កាតុង និងសម្ភារៈវេចខ្ចប់ដែលចូល។\n២) សំណើមកាតុងត្រូវតែ < ១២% (ឬតាមស្តង់ដារប្រេន) និងមានកំណត់ត្រា។",
+                            fully_kh: "១) IQC ប្រើឧបករណ៍វាស់សំណើមដើម្បីវាស់កាតុង និងសម្ភារៈវេចខ្ចប់ដែលចូល。 \n២) សំណើមកាតុងត្រូវតែ < ១២% (ឬតាមស្តង់ដារប្រេន) និងមានកំណត់ត្រា។",
+                            partially_cn: "1) 进料时实施了水分测试，但纸箱抽样批次记录不齐全，或测定仪点检数据偶有缺漏。",
+                            partially_en: "1) Moisture tests are conducted, but sampling record logs for cartons are incomplete or missing specific batch entries.",
+                            partially_kh: "១) មានការវាស់សំណើម ប៉ុន្តែកំណត់ត្រាប្រហោងខ្លះមិនទាន់ពេញលេញតាមបាច់ទំនិញ។",
                             not_cn: "1) 进料检验无水分仪，靠“手感”判断含水率。\n2) 即使发现材料淋雨发霉受潮，仍无记录、直接放行入库。",
                             not_en: "1) Incoming inspections lack moisture readers; rely on touch/feel estimation.\n2) Wet/damaged boxes accepted without moisture testing or formal quarantine.",
-                            not_kh: "១) គ្មានឧបករណ៍វាស់សំណើមពេលទទួលទំនិញ ប្រើអារម្មណ៍ប៉ះស្ទាបស្មាន។\n២) ប្រអប់ដែលសើម ឬខូចខាតត្រូវបានទទួលចូលឃ្លាំងដោយគ្មានការវាស់កម្រិតសំណើម។"
+                            not_kh: "១) គ្មានឧបករណ៍វាស់សំណើមពេលទទួលទំនិញ ប្រើអារម្មណ៍ប៉ះស្ទាបស្មាន។ \n២) ប្រអប់ដែលសើម ឬខូចខាតត្រូវបានទទួលចូលឃ្លាំងដោយគ្មានការវាស់កម្រិតសំណើម。"
                         },
                         { 
                             id: "2.6", 
@@ -518,10 +672,13 @@
                             comments: "",
                             fully_cn: "1) 外包装及内包材表面平整干燥，无变形扭曲，亦无渗水发黑痕迹。\n2) 检查项目覆盖所有表面及接缝处，包装完好率达100%。",
                             fully_en: "1) All cartons/packaging are dry, rigid, undeformed, with no dark water stains.\n2) Comprehensive checking of surfaces/seams, 100% dry compliance.",
-                            fully_kh: "១) កាតុងខាងក្រៅនិងក្នុងមានសភាពស្ងួត រឹងមាំ មិនវៀចវេរ គ្មានស្នាមប្រឡាក់ទឹក។\n២) ការពិនិត្យផ្ទៃទាំងមូលនិងតាមថ្នេរ កម្រិតអនុលោមភាពស្ងួត ១០០%។",
+                            fully_kh: "១) កាតុងខាងក្រៅនិងក្នុងមានសភាពស្ងួត រឹងមាំ មិនវៀចវេរ គ្មានស្នាមប្រឡាក់ទឹក។ \n២) ការពិនិត្យផ្ទៃទាំងមូលនិងតាមថ្នេរ កម្រិតអនុលោមភាពស្ងួត ១០០%។",
+                            partially_cn: "1) 包材整体外观正常无发黑发霉，但在仓储搬运中，局部有极少量边角发生轻微磨损或受潮变形，但材料整体含水率仍达标。",
+                            partially_en: "1) Materials look fine with no mold, but minor edge scuffing or slight physical warping due to packing pressure is found (moisture content still within limits).",
+                            partially_kh: "១) គ្រោងឆ្អឹងកាតុងល្អ គ្មានផ្សិត ប៉ុន្តែមានផ្នត់ជ្រុងខ្លះខូចទ្រង់ទ្រាយតិចតួចពេលដឹកជញ្ជូន។",
                             not_cn: "1) 到港纸箱表面有明显水滴、水渍或软塌变形，直接拆包并流入生产线。\n2) 包材在淋雨堆放后未做干化和隔离，直接被送入车间。",
                             not_en: "1) Carton boxes arrived soft, collapsed, with visible rain stains/water drops.\n2) Rain-exposed packaging sent directly to production line without drying.",
-                            not_kh: "១) កាតុងមកដល់មានសភាពទន់ ជ្រាបទឹក ឬខូចទ្រង់ទ្រាយ តែនៅតែយកទៅប្រើប្រាស់។\n២) សម្ភារៈវេចខ្ចប់ត្រូវទឹកភ្លៀងមិនបានសម្លាប់មេរោគ/ធ្វើឱ្យស្ងួត យកទៅប្រើភ្លាមៗ។"
+                            not_kh: "១) កាតុងមកដល់មានសភាពទន់ ជ្រាបទឹក ឬខូចទ្រង់ទ្រាយ តែនៅតែយកទៅប្រើប្រាស់។ \n២) សម្ភារៈវេចខ្ចប់ត្រូវទឹកភ្លៀងមិនបានសម្លាប់មេរោគ/ធ្វើឱ្យស្ងួត យកទៅប្រើភ្លាមៗ。"
                         },
                         { 
                             id: "2.7", 
@@ -533,10 +690,13 @@
                             comments: "",
                             fully_cn: "1) 除湿机排水塑料管固定完好，穿墙引出车间外，不漏水入仓。\n2) 如果无穿墙管，专人定时清理积水桶，避免水满停机或溢出。",
                             fully_en: "1) Drainage pipes secured tightly, led out through the exterior wall.\n2) If tanks used, dedicated team empties them frequently to prevent auto-stops/overflow.",
-                            fully_kh: "១) ទុយោបង្ហូរទឹកត្រូវបានរៀបចំត្រឹមត្រូវ និងបង្ហូរចេញទៅក្រៅជញ្ជាំងអគារ។\n២) ប្រសិនបើប្រើធុងទឹក មានបុគ្គលិកចាក់ទឹកចេញជាប្រចាំ ដើម្បីបង្ការការ tràn ទឹក។",
+                            fully_kh: "១) ទុយោបង្ហូរទឹកត្រូវបានរៀបចំត្រឹមត្រូវ និងបង្ហូរចេញទៅក្រៅជញ្ជាំងអគារ។ \n២) ប្រសិនបើប្រើធុងទឹក មានបុគ្គលិកចាក់ទឹកចេញជាប្រចាំ ដើម្បីបង្ការការ tràn ទឹក។",
+                            partially_cn: "1) 排水管接引到了仓外，但塑料水管固定不够牢固，存在轻微渗漏或摆动隐患，需额外扎带加固。",
+                            partially_en: "1) Drainage tubes are directed outside, but the plastic hose routing is loose and needs secondary straps or clamp reinforcement to prevent leak risks.",
+                            partially_kh: "១) ទុយោបង្ហូរចេញទៅក្រៅ ប៉ុន្តែការភ្ជាប់រលុងបន្តិចបន្តួចរង់ចាំការចងខ្សែរឹតបន្ថែម។",
                             not_cn: "1) 除湿机水管损坏、断裂，导致抽出来的水直接流在仓库地板上造成积水二次潮湿。\n2) 水箱蓄满后无报警或无人处理，机器自动关机罢工多日。",
                             not_en: "1) Broken hose leaks water back onto warehouse floor, compounding humidity.\n2) Collection tanks overflowed or triggered auto-shutoff without action for days.",
-                            not_kh: "១) ទុយោបង្ហូរទឹកធ្លុះធ្លាយ ធ្វើឱ្យទឹកហូរដក់លើឥដ្ឋឃ្លាំង បង្កើតសំណើមកាន់តែខ្លាំង។\n២) ធុងទឹកហៀរ ឬម៉ាស៊ីនបិទអូតូដោយគ្មានបុគ្គលិកទៅចាក់ចេញជាច្រើនថ្ងៃ។"
+                            not_kh: "១) ទុយោបង្ហូរទឹកធ្លុះធ្លាយ ធ្វើឱ្យទឹកហូរដក់លើឥដ្ឋឃ្លាំង បង្កើតសំណើមកាន់តែខ្លាំង។ \n២) ធុងទឹកហៀរ ឬម៉ាស៊ីនបិទអូតូដោយគ្មានបុគ្គលិកទៅចាក់ចេញជាច្រើនថ្ងៃ。"
                         }
                     ]
                 },
@@ -555,27 +715,33 @@
                             status: 'P', 
                             photo: null, 
                             comments: "",
-                            fully_cn: "1) 裁剪裁片、针车鞋面在流转期间全部使用塑料托框、周转篮或周转推车。\n2) 绝对无在制品直接靠置、倒置在水泥地面或尘土较多处的现象。",
+                            fully_cn: "1) 裁剪裁片、针车鞋面在流转期间全部使用塑料托框、周转篮 or 周转推车。\n2) 绝对无在制品直接靠置、倒置在水泥地面或尘土较多处的现象。",
                             fully_en: "1) Stitched uppers and cut parts placed strictly in clean plastic bins/trolleys.\n2) Zero tolerance for WIP directly touching cement floors or dusty pathways.",
-                            fully_kh: "១) បំណែកកាត់ និងស្បែកជើងដែលដេររួច ត្រូវបានដាក់ក្នុងកន្ត្រកជ័រ ឬរទេះរុញស្អាត។\n២) គ្មានដាច់ខាតចំពោះ WIP ដាក់ប៉ះផ្ទាល់នឹងឥដ្ឋស៊ីម៉ង់ត៍ ឬផ្លូវដើរដែលមានធូលី។",
+                            fully_kh: "១) បំណែកកាត់ និងស្បែកជើងដែលដេររួច ត្រូវបានដាក់ក្នុងកន្ត្រកជ័រ ឬរទេះរុញស្អាត។ \n២) គ្មានដាច់ខាតចំពោះ WIP ដាក់ប៉ះផ្ទាល់នឹងឥដ្ឋស៊ីម៉ង់ត៍ ឬផ្លូវដើរដែលមានធូលី។",
+                            partially_cn: "1) 整体全部使用托框，但由于流转繁忙，少数卡片或裁片包装袋发生边缘拖地，但物料本身并未接触泥水或地气。",
+                            partially_en: "1) Baskets are used, but due to tight space on conveyor lines, part of a wrapping bundle momentarily dangled down and touched the floor.",
+                            partially_kh: "១) ប្រើកន្ត្រកទាំងអស់ ប៉ុន្តែពេលមមាញឹកខ្លាំងមានកាតុង ឬថង់ខ្ចប់ខ្លះប៉ះឥដ្ឋខាងក្រោម។",
                             not_cn: "1) 半成品、车缝鞋套在车道两旁席地摆放，沾染地气和污物。\n2) 转弯处有裁片零散掉落在泥水地上无包装防护。",
                             not_en: "1) Semi-finished bundles piled on floor next to lanes, exposed to damp/grime.\n2) Loose panels dropped onto wet floors without cover or triage.",
-                            not_kh: "១) បាច់ផលិតផលពាក់កណ្តាលសម្រេច ត្រូវបានគរទុកលើឥដ្ឋក្បែរផ្លូវដើរ ងាយរងសំណើម។\n២) បំណែកកាត់ជ្រុះលើឥដ្ឋដែលសើមដោយគ្មានការការពារ ឬខ្ចប់ត្រឹមត្រូវ។"
+                            not_kh: "១) បាច់ផលិតផលពាក់កណ្តាលសម្រេច ត្រូវបានគរទុកលើឥដ្ឋក្បែរផ្លូវដើរ ងាយរងសំណើម។ \n២) បំណែកកាត់ជ្រុះលើឥដ្ឋដែលសើមដោយគ្មានការការពារ ឬខ្ចប់ត្រឹមត្រូវ。"
                         },
                         { 
                             id: "3.2", 
                             en: "Are cardboard or wooden boxes strictly prohibited on the production floor, with only cleanable plastic containers used?", 
-                            cn: "车间地面上是否禁止堆放任何纸箱或木箱，所有运转容器必须为塑料材质并定期清洗？", 
+                            cn: "车间地面上是否禁止堆放任何纸箱 or 木箱，所有运转容器必须为塑料材质并定期清洗？", 
                             kh: "តើប្រអប់ក្រដាស ឬប្រអប់ឈើត្រូវបានហាមឃាត់នៅលើឥដ្ឋផលិតកម្ម ដោយប្រើតែប្រអប់ជ័រដែលអាចលាងសម្អាតបាន?", 
                             status: 'P', 
                             photo: null, 
                             comments: "",
                             fully_cn: "1) 车床、针车拉线无一次性硬纸箱，全面采用耐磨可水洗塑料框。\n2) 塑料框制订了清洁SOP，定期消毒、擦拭，防积尘与真菌附着。",
                             fully_en: "1) Disposable cardboard/wooden boxes totally banned from workshop floor.\n2) Plastic bins used for parts are washed/sanitized with logs maintained.",
-                            fully_kh: "១) ប្រអប់កាតុង ឬប្រអប់ឈើប្រើម្តងរួចចោល ត្រូវបានហាមឃាត់នៅលើឥដ្ឋផលិតកម្ម។\n២) ប្រអប់ជ័រដែលប្រើត្រូវបានលាងសម្អាត និងសម្លាប់មេរោគជាប្រចាំ។",
+                            fully_kh: "១) ប្រអប់កាតុង ឬប្រអប់ឈើប្រើម្តងរួចចោល ត្រូវបានហាមឃាត់នៅលើឥដ្ឋផលិតកម្ម。 \n២) ប្រអប់ជ័រដែលប្រើត្រូវបានលាងសម្អាត និងសម្លាប់មេរោគជាប្រចាំ។",
+                            partially_cn: "1) 100%采用塑料周转箱进行流转，但在局部工位发现一个备用零配件盒使用的是小废纸盒改造，需立即撤换成小塑料盒。",
+                            partially_en: "1) 100% plastic containers utilized on floor, but one worker repurposed a small cardboard scrap box to store extra needles at their bench.",
+                            partially_kh: "១) ប្រើប្រអប់ជ័រស្ទើរតែទាំងអស់ ប៉ុន្តែឃើញមានប្រអប់ក្រដាសតូចមួយដាក់ម្ជុលដេរនៅ工位។",
                             not_cn: "1) 车间地下摆放许多破烂纸箱作为收纳，受潮发霉也未予清出。\n2) 容器表面污迹斑斑、沾满黏胶或润滑油污却不洗，污染转入物料。",
                             not_en: "1) Scrapped/dirty cardboard boxes used for storage, showing visible mold/dust.\n2) Stacking containers coated in old grease or glue residues, transfer risk.",
-                            not_kh: "១) ប្រអប់កាតុងចាស់ៗ និងកខ្វក់ត្រូវបានយកមកដាក់អីវ៉ាន់ ដុះផ្សិតមិនបានដកចេញ។\n២) ប្រអប់ជ័រប្រឡាក់ខ្លាញ់ ប្រេង ឬកាវចាស់ៗ ដែលអាចផ្ទេរមេរោគទៅផលិតផល។"
+                            not_kh: "១) ប្រអប់កាតុងចាស់ៗ និងកខ្វក់ត្រូវបានយកមកដាក់អីវ៉ាន់ ដុះផ្សិតមិនបានដកចេញ។ \n២) ប្រអប់ជ័រប្រឡាក់ខ្លាញ់ ប្រេង ឬកាវចាស់ៗ ដែលអាចផ្ទេរមេរោគទៅផលិតផល。"
                         },
                         { 
                             id: "3.3", 
@@ -587,10 +753,13 @@
                             comments: "",
                             fully_cn: "1) 针车底盘密封良好、垫有吸油纸，蒸汽发生器及输送管保温包扎无冷凝水。\n2) 机修每日点检漏油漏水并由车间主管复核记录。",
                             fully_en: "1) Sewing machines sealed/padded properly with oil-absorbing sheets.\n2) Pipes insulated to avoid condensate drips; daily maintenance logs signed.",
-                            fully_kh: "១) ម៉ាស៊ីនដេរមានទ្រាប់ក្រដាសបឺតប្រេង ទុយោចំហាយទឹកមានរុំស្កុតការពារសំណើម។\n២) បុគ្គលិកបច្ចេកទេសពិនិត្យប្រចាំថ្ងៃលើការលេចធ្លាយប្រេង និងទឹក។",
-                            not_cn: "1) 车缝机漏机油直接滴在面料上，工人直接擦掉继续做，机油富含有机质极易发霉。\n2) 蒸汽管上方冷凝积水不断滴落在包装线上，纸盒被打湿。",
+                            fully_kh: "១) ម៉ាស៊ីនដេរមានទ្រាប់ក្រដាសបឺតប្រេង ទុយោចំហាយទឹកមានរុំស្កុតការពារសំណើម។ \n២) បុគ្គលិកបច្ចេកទេសពិនិត្យប្រចាំថ្ងៃលើការលេចធ្លាយប្រេង និងទឹក។",
+                            partially_cn: "1) 设备密封良好，但发现个别老旧针车底盘的吸油纸已吸满油污未及时更换，机油尚未滴落，需当场处理。",
+                            partially_en: "1) Seals are solid, but a few older machines have saturated oil pads that need urgent replacement before oil can leak/drip.",
+                            partially_kh: "១) ម៉ាស៊ីនដេរខ្លះមានក្រដាសទ្រាប់ប្រេងជោកខ្លាំង មិនទាន់បានប្តូរថ្មី (ប៉ុន្តែមិនទាន់ស្រក់ចូលទំនិញ)។",
+                            not_cn: "1) 针车机漏机油直接滴在面料上，工人直接擦掉继续做，机油富含有机质极易发霉。\n2) 蒸汽管上方冷凝积水不断滴落在包装线上，纸盒被打湿。",
                             not_en: "1) Oil drops directly onto uppers; wiped off manually, oil residues support mold.\n2) High-temp steam pipe leaks condensate directly onto active packing lanes.",
-                            not_kh: "១) ប្រេងម៉ាស៊ីនស្រក់ចំសាច់ស្បែកជើង ហើយគ្រាន់តែជូតចេញរួចធ្វើបន្ត (ងាយដុះផ្សិត)។\n២) មានទឹកស្រក់ចេញពីទុយោចំហាយទឹកចំពីលើខ្សែសង្វាក់វេចខ្ចប់។"
+                            not_kh: "១) ប្រេងម៉ាស៊ីនស្រក់ចំសាច់ស្បែកជើង ហើយគ្រាន់តែជូតចេញរួចធ្វើបន្ត (ងាយដុះផ្សិត)。\n២) មានទឹកស្រក់ចេញពីទុយោចំហាយទឹកចំពីលើខ្សែសង្វាក់វេចខ្ចប់。"
                         },
                         { 
                             id: "3.4", 
@@ -602,25 +771,31 @@
                             comments: "",
                             fully_cn: "1) 烫斗抽湿风机强劲，能够完全抽走烫平后残留在纤维内部的水分。\n2) 烫机输出蒸汽干燥不含游离水，有定期排水排污制度。",
                             fully_en: "1) Strong suction fans on vacuum tables actively extract heat/moisture.\n2) Clean dry steam used; regular blow-down schedule to prevent spit-water.",
-                            fully_kh: "១) កង្ហារបឺតខ្យល់នៅលើតុអ៊ុតមានកម្លាំងខ្លាំង អាចបឺតសំណើមចេញអស់។\n២) ប្រើចំហាយទឹកស្ងួតល្អ មានការបង្ហូរទឹកកខ្វក់ចេញជាទៀងទាត់ពីធុងចំហុយ។",
+                            fully_kh: "១) កង្ហារបឺតខ្យល់នៅលើតុអ៊ុតមានកម្លាំងខ្លាំង អាចបឺតសំណើមចេញអស់។ \n២) ប្រើចំហាយទឹកស្ងួតល្អ មានការបង្ហូរទឹកកខ្វក់ចេញជាទៀងទាត់ពីធុងចំហុយ។",
+                            partially_cn: "1) 抽吸马达工作正常，但烫台防烫垫由于长期使用稍微发潮，且工人未完全等其冷干即转序，含水率在警戒线边缘。",
+                            partially_en: "1) Vacuum motor is active, but the pressing padding is slightly damp to touch due to intensive continuous ironing; needs a short dry run/cool down.",
+                            partially_kh: "១) ម៉ូទ័របឺតខ្យល់ដំណើរការ ប៉ុន្តែស្រទាប់ទ្រាប់តុអ៊ុតឡើងសើមបន្តិចបន្តួចដោយសារការអ៊ុតជាប់គ្នា។",
                             not_cn: "1) 抽吸马达烧毁失效，工人关掉吸风强行蒸烫，鞋/衣烫后严重潮湿。\n2) 熨斗出水口不断“喷冷水”将面料打湿，未做烘干直接转包装。",
                             not_en: "1) Vacuum motor failed; ironing performed without suction, trapping humidity.\n2) Wet condensation/water droplets sprayed from iron onto material, packed wet.",
-                            not_kh: "១) ម៉ូទ័របឺតខ្យល់ខូចខាត អ៊ុតដោយគ្មានការបឺតខ្យល់ បណ្តាលឱ្យកកស្ទះសំណើម។\n២) ឆ្នាំងអ៊ុតបាញ់ចេញជាតំណក់ទឹកធ្វើឱ្យសើមសាច់ក្រណាត់ ហើយខ្ចប់ទាំងសើម។"
+                            not_kh: "១) ម៉ូទ័របឺតខ្យល់ខូចខាត អ៊ុតដោយគ្មានការបឺតខ្យល់ បណ្តាលឱ្យកកស្ទះសំណើម។ \n២) ឆ្នាំងអ៊ុតបាញ់ចេញជាតំណក់ទឹកធ្វើឱ្យសើមសាច់ក្រណាត់ ហើយខ្ចប់ទាំងសើម。"
                         },
                         { 
                             id: "3.5", 
                             en: "Are finished products fully cooled (recommended 1-2 hours) and returned to room temperature before packing?", 
                             cn: "熨烫或烘道烘干后的成品是否留出充足的时间完全冷却和干燥（推荐至少 1 至 2 小时），降温至室温后方可包装？", 
-                            kh: "តើផលិតផលដែលអ៊ុត ឬកម្តៅរួចត្រូវបានទុកឱ្យត្រជាក់ពេញលេញ (ណែនាំ ១-២ ម៉ោង) ដល់សីតុណ្ហភាពបន្ទប់មុនវេចខ្ចប់?", 
+                            kh: "តើផលិតផលដែលអ៊ុត ឬកម្តៅរួចត្រូវបានទុកឱ្យត្រជាក់ពេញលេញ (ណែនាំ ១-២ ម៉ោង) ដល់សីណ្ហភាពបន្ទប់មុនវេចខ្ចប់?", 
                             status: 'P', 
                             photo: null, 
                             comments: "",
                             fully_cn: "1) 包装线设温检哨岗，对下线成品测温，确认恢复至环境温度方可装盒。\n2) 冷却缓冲区通风干燥，堆码有序，不阻碍降温空气流通。",
                             fully_en: "1) Temperature checked; products must return to room temp before boxing.\n2) Cooling zones are dry and well-ventilated; stacking leaves sufficient air gaps.",
-                            fully_kh: "១) មានការវាស់សីតុណ្ហភាព៖ ផលិតផលត្រូវតែត្រឡប់ទៅសីតុណ្ហភាពធម្មតាសិនមុនខ្ចប់។\n២) កន្លែងទុកឱ្យត្រជាក់មានខ្យល់ចេញចូលល្អ ការរៀបចំគរទុកមានចន្លោះខ្យល់។",
+                            fully_kh: "១) មានការវាស់សីតុណ្ហភាព៖ ផលិតផលត្រូវតែត្រឡប់ទៅសីតុណ្ហភាពធម្មតាសិនមុនខ្ចប់។ \n២) កន្លែងទុកឱ្យត្រជាក់មានខ្យល់ចេញចូលល្អ ការរៀបចំគរទុកមានចន្លោះខ្យល់។",
+                            partially_cn: "1) 设有冷却缓冲区，但部分加急订单产品的冷却时间在45分钟至1小时之间，未足额满2小时，但用红外温度枪确认已恢复至室温。",
+                            partially_en: "1) Stacking cooling area is used, but rush orders cooled for only 45-60 mins (below the ideal 1-2 hours) though confirmed as room temperature before boxing.",
+                            partially_kh: "១) មានកន្លែងទុកឱ្យត្រជាក់ ប៉ុន្តែដោយសារប្រញាប់ចេញទំនិញ ទុកត្រឹមតែ ៤៥-៦០នាទី (សីតុណ្ហភាពធម្មតា)។",
                             not_cn: "1) 热鞋/刚下整烫线的热衣立刻装入密封塑料袋，内袋起冷凝雾气水珠直接滋生霉菌。\n2) 为了追求产量快速包装，下机5分钟内即行封箱。",
                             not_en: "1) Hot items packed into polybags instantly, causing internal sweat/moisture droplets.\n2) High-speed packing within 5 mins of heating, trapping heat inside cartons.",
-                            not_kh: "១) ផលិតផលនៅក្តៅយកទៅខ្ចប់ក្នុងថង់ជ័រភ្លាម បង្កជាតំណក់ទឹកក្នុងថង់នាំឱ្យដុះផ្សិត។\n២) ដើម្បីបង្កើនល្បឿន ខ្ចប់ទំនិញភ្លាមៗក្នុងរយៈពេល ៥នាទីក្រោយចេញពីម៉ាស៊ីនកម្តៅ។"
+                            not_kh: "១) ផលិតផលនៅក្តៅយកទៅខ្ចប់ក្នុងថង់ជ័រភ្លាម បង្កជាតំណក់ទឹកក្នុងថង់នាំឱ្យដុះផ្សិត។ \n២) ដើម្បីបង្កើនល្បឿន ខ្ចប់ទំនិញភ្លាមៗក្នុងរយៈពេល ៥នាទីក្រោយចេញពីម៉ាស៊ីនកម្តៅ。"
                         },
                         { 
                             id: "3.6", 
@@ -632,10 +807,13 @@
                             comments: "",
                             fully_cn: "1) 全体包装与品质检针人员佩戴尼龙、乳胶或防潮涤纶薄白手套。\n2) 手套脏污受潮时有强制更换制度，并备足备用品。",
                             fully_en: "1) All packers/inspectors wear thin synthetic (nylon/polyester) white gloves.\n2) Mandatory exchange schedule for soiled/sweaty gloves; sufficient spares.",
-                            fully_kh: "១) បុគ្គលិកវេចខ្ចប់/QC ពាក់ស្រោមដៃពណ៌សស្តើង (នីឡុង ឬប៉ូលីស្ទែរ)។\n២) មានកំណត់ការប្តូរស្រោមដៃថ្មីពេលស្រោមដៃចាស់ឡើងសើម ឬប្រឡាក់។",
+                            fully_kh: "១) បុគ្គលិកវេចខ្ចប់/QC ពាក់ស្រោមដៃពណ៌សស្តើង (នីឡុង ឬប៉ូលីស្ទែរ)។ \n២) មានកំណត់ការប្តូរស្រោមដៃថ្មីពេលស្រោមដៃចាស់ឡើងសើម ឬប្រឡាក់។",
+                            partially_cn: "1) 包装与QC人员全员佩戴了尼龙防潮白手套，但点检时有一名工人的手套指尖处由于沾染了微量摩擦胶水未及时洗换。",
+                            partially_en: "1) Synthetic gloves are worn by all packers, but one worker's glove tips are slightly soiled with glue residue and need immediate change.",
+                            partially_kh: "១) ពាក់ស្រោមដៃស្តើងទាំងអស់ ប៉ុន្តែមានកម្មករម្នាក់ប្រឡាក់កាវនៅចុងម្រាមដៃមិនទាន់បានប្តូរ។",
                             not_cn: "1) 员工直接光手触摸成品，手汗油渍污染鞋底、鞋面留下汗斑霉点源头。\n2) 戴粗厚起毛、吸满汗水发酸的劳保棉纱手套接触货物。",
                             not_en: "1) Bare hands contact products, leaving sweat/sebum traces (ideal mold food).\n2) Thick, sweat-soaked canvas/cotton gloves worn, transmitting fungal spores.",
-                            not_kh: "១) ប្រើដៃទទេរប៉ះផលិតផល នាំឱ្យប្រឡាក់ញើស ឬខ្លាញ់ដៃ (ងាយដុះផ្សិតបំផុត)។\n២) ពាក់ស្រោមដៃកប្បាសក្រាស់ដែលជោកញើស និងផ្ទុកមេរោគផ្សិតប៉ះពាល់ទំនិញ។"
+                            not_kh: "១) ប្រើដៃទទេរប៉ះផលិតផល នាំឱ្យប្រឡាក់ញើស ឬខ្លាញ់ដៃ (ងាយដុះផ្សិតបំផុត)។ \n២) ពាក់ស្រោមដៃកប្បាសក្រាស់ដែលជោកញើស និងផ្ទុកមេរោគផ្សិតប៉ះពាល់ទំនិញ。"
                         },
                         { 
                             id: "3.7", 
@@ -646,11 +824,14 @@
                             photo: null, 
                             comments: "",
                             fully_cn: "1) 包材在线上分类上架隔离干燥堆放，无脏污破损。\n2) 使用的水分测定仪证明其绝对干燥不超标，外形坚挺挺括。",
-                            fully_en: "1) Packaging materials stored on racks off floors, dry, clean, rigid.\n2) Random moisture checks confirm dry status before packing.",
-                            fully_kh: "១) សម្ភារៈវេចខ្ចប់រក្សាទុកលើធ្នើរដាច់ដោយឡែក ស្ងួត ស្អាត និងរឹងមាំល្អ។\n២) វាស់សំណើមជាប្រចាំដើម្បីធានាភាពស្ងួតមុនពេលយកទៅប្រើប្រាស់។",
+                            fully_en: "1) Stacking containers coated in old grease or glue residues, transfer risk.\n2) Random moisture checks confirm dry status before packing.",
+                            fully_kh: "១) សម្ភារៈវេចខ្ចប់រក្សាទុកលើធ្នើរដាច់ដោយឡែក ស្ងួត ស្អាត និងរឹងមាំល្អ។ \n២) វាស់សំណើមជាប្រចាំដើម្បីធានាភាពស្ងួតមុនពេលយកទៅប្រើប្រាស់。",
+                            partially_cn: "1) 所有包材在库测试含水率完全符合品牌标准，但有个别鞋撑纸模在装运时外形略有挤压变形，但完全干燥无水渍。",
+                            partially_en: "1) All packaging is certified dry, but a few inner box/paper inserts are slightly bent or compressed during sorting.",
+                            partially_kh: "១) សម្ភារៈវេចខ្ចប់ទាំងអស់ស្ងួតល្អ ប៉ុន្តែមានពុម្ពជើងក្រដាសខ្លះវៀចវេរទ្រង់ទ្រាយដោយសារសង្កត់។",
                             not_cn: "1) 外箱、内盒等包材堆放在地上吸饱湿气，外壳严重软塌软烂。\n2) 拷贝纸发黄起水痕，鞋模纸托受潮严重，仍强制装箱。",
                             not_en: "1) Carton/inner boxes stacked on wet floor, absorbing moisture, getting soft.\n2) Wrapping paper has visible water spots or damp foot forms stuffed inside.",
-                            not_kh: "១) កាតុងខាងក្រៅ/ក្នុងគរទុកលើឥដ្ឋសើម នាំឱ្យបឺតសំណើមទន់ជ្រាយ។\n២) ក្រដាសខ្ចប់មានស្នាមអុជទឹក ឬពុម្ពជើងក្រដាសសើមតែនៅតែញាត់ចូលក្នុងស្បែកជើង។"
+                            not_kh: "១) កាតុងខាងក្រៅ/ក្នុងគរទុកលើឥដ្ឋសើម នាំឱ្យបឺតសំណើមទន់ជ្រាយ។ \n២) ក្រដាសខ្ចប់មានស្នាមអុជទឹក ឬពុម្ពជើងក្រដាសសើមតែនៅតែញាត់ចូលក្នុងស្បែកជើង。"
                         },
                         { 
                             id: "3.8", 
@@ -662,10 +843,13 @@
                             comments: "",
                             fully_cn: "1) 防霉包/干燥剂未拆封时保存在全密封铁桶、铝箔袋中。\n2) 封箱人员在投效防霉贴后立即完成外箱贴胶封口，过程小于2分钟，确保防护因子有效浓度。",
                             fully_en: "1) Anti-mold stickers kept in airtight containers (sealed metal bins/foil bags).\n2) Items pasted and carton taped immediately (within 2 mins) to preserve vapor active agents.",
-                            fully_kh: "១) ស្ទីគ័រការពារផ្សិតត្រូវបានរក្សាទុកក្នុងធុងដែក ឬថង់អាលុយមីញ៉ូមបិទជិត។\n២) ដាក់ស្ទីគ័ររួចត្រូវបិទកាតុងភ្លាមៗ (ក្នុងរយៈពេល ២នាទី) ដើម្បីរក្សាប្រសិទ្ធភាព។",
+                            fully_kh: "១) ស្ទីគ័រការពារផ្សិតត្រូវបានរក្សាទុកក្នុងធុងដែក ឬថង់អាលុយមីញ៉ូមបិទជិត។ \n២) ដាក់ស្ទីគ័ររួចត្រូវបិទកាតុងភ្លាមៗ (ក្នុងរយៈពេល ២នាទី) ដើម្បីរក្សាប្រសិទ្ធភាព。",
+                            partially_cn: "1) 备用的防霉贴存放在防潮金属密封盒里，但封箱时的工序时间略有拉长（在3~5分钟之间，超出了2分钟的建议值），但仍能维持基本防护气雾。",
+                            partially_en: "1) Stickers kept sealed, but the packaging-to-taping flow takes 3-5 mins (slightly longer than the 2-min limit).",
+                            partially_kh: "១) រក្សាទុកស្ទីគ័រក្នុងប្រអប់បិទជិត ប៉ុន្តែការបិទកាតុងចំណាយពេលចន្លោះ ៣-៥នាទី (យឺតជាង ២នាទី)។",
                             not_cn: "1) 防霉贴直接大口敞开暴露在空气中吸潮失效、活性分子提前释放干净。\n2) 提早将防霉包丢入内盒，过数小时、甚至跨天后再进行胶带封箱。",
                             not_en: "1) Anti-mold stickers left open on tables, exhausting active ingredients early.\n2) Stickers dropped into boxes hours before sealing, venting the gas out.",
-                            not_kh: "១) ទុកស្ទីគ័រចំហរលើតុ ធ្វើឱ្យបាត់បង់សារធាតុសកម្មមុនពេលប្រើប្រាស់។\n២) ដាក់ស្ទីគ័រចូលក្នុងប្រអប់រាប់ម៉ោងទើបបិទកាតុង បណ្តាលឱ្យហើរជាតិអស់។"
+                            not_kh: "១) ទុកស្ទីគ័រចំហរលើតុ ធ្វើឱ្យបាត់បង់សារធាតុសកម្មមុនពេលប្រើប្រាស់។ \n២) ដាក់ស្ទីគ័រចូលក្នុងប្រអប់រាប់ម៉ោងទើបបិទកាតុង បណ្តាលឱ្យហើរជាតិអស់。"
                         },
                         { 
                             id: "3.9", 
@@ -677,10 +861,13 @@
                             comments: "",
                             fully_cn: "1) 包装QC每小时定时抽样检测鞋面、鞋垫、鞋底含水率。\n2) 测试数据完全低于品牌控制基准线，并有详细检测台账存档。",
                             fully_en: "1) QC measures product moisture hourly (uppers, insoles, outsoles).\n2) Values conform to brand-defined dry thresholds; records signed off daily.",
-                            fully_kh: "១) QC វាស់សំណើមផលិតផលរៀងរាល់ម៉ោង (ស្បែកខាងលើ ទ្រនាប់ ជង្រុកបាត)។\n២) តម្លៃសំណើមត្រូវតែទាបជាងដែនកំណត់កំណត់ដោយប្រេន និងមានកំណត់ត្រា។",
+                            fully_kh: "១) QC វាស់សំណើមផលិតផលរៀងរាល់ម៉ោង (ស្បែកខាងលើ ទ្រនាប់ ជង្រុកបាត)។ \n២) តម្លៃសំណើមត្រូវតែទាបជាងដែនកំណត់កំណត់ដោយប្រេន និងមានកំណត់ត្រា។",
+                            partially_cn: "1) 包装QC对成品进行了随机水分测量，数据全部合格达标，但测试频率由于生产加急，部分时段变成了两小时抽测一次。",
+                            partially_en: "1) Moisture tests are carried out with perfect dry readings, but testing frequency was reduced to once every two hours due to peak production rush.",
+                            partially_kh: "១) QC វាស់សំណើមត្រឹមត្រូវលទ្ធផលល្អ ប៉ុន្តែការវាស់បានធ្វើឡើងរៀងរាល់ ២ម៉ោងម្តង (ដោយសារការប្រញាប់)។",
                             not_cn: "1) 包装端没有含水率计，QC没有任何测试成品干湿度的动作。\n2) 抽样水分超标未做退回返烘，依然直接做包装贴签出车间。",
                             not_en: "1) Packing line has no moisture meter; QC performs no factual material dryness checks.\n2) Products with excessive moisture are packed regardless without re-drying.",
-                            not_kh: "១) គ្មានឧបករណ៍វាស់សំណើម QC មិនបានវាស់ស្ទង់ភាពស្ងួតជាក់ស្តែងឡើយ។\n២) ផលិតផលដែលមានសំណើមលើសកំណត់នៅតែត្រូវបានវេចខ្ចប់ដោយមិនបញ្ជូនទៅកម្តៅឡើងវិញ។"
+                            not_kh: "១) គ្មានឧបករណ៍វាស់សំណើម QC មិនបានវាស់ស្ទង់ភាពស្ងួតជាក់ស្តែងឡើយ។ \n២) ផលិតផលដែលមានសំណើមលើសកំណត់នៅតែត្រូវបានវេចខ្ចប់ដោយមិនបញ្ជូនទៅកម្តៅឡើងវិញ。"
                         },
                         { 
                             id: "3.10", 
@@ -692,10 +879,13 @@
                             comments: "",
                             fully_cn: "1) 包装流水线、台面干净无尘，传送皮带每日交接班进行擦洗和防霉稀释剂喷洗。\n2) 包装区域每周末彻底大扫除除尘消杀，保持环境无死角卫生。",
                             fully_en: "1) Packaging surfaces/conveyors clean, wiped down with mild anti-mold agent daily.\n2) Systematic weekend cleaning program to prevent mold spore accumulation.",
-                            fully_kh: "១) តុនិងខ្សែពានវេចខ្ចប់ស្អាត ត្រូវបានជូតសម្អាតដោយទឹកថ្នាំការពារផ្សិតរាល់ថ្ងៃ។\n២) មានការសម្អាតធំរៀងរាល់ចុងសប្តាហ៍ដើម្បីការពារការកកើតស្ព័រផ្សិត។",
+                            fully_kh: "១) តុនិងខ្សែពានវេចខ្ចប់ស្អាត ត្រូវបានជូតសម្អាតដោយទឹកថ្នាំការពារផ្សិតរាល់ថ្ងៃ។ \n២) មានការសម្អាតធំរៀងរាល់ចុងសប្តាហ៍ដើម្បីការពារការកកើតស្ព័រផ្សិត។",
+                            partially_cn: "1) 包装线台面十分洁净，且有定期防霉稀释剂擦拭记录，但在两组装配轨道缝隙处发现有微量毛屑未吸净，需要每周大扫除时深度清理。",
+                            partially_en: "1) Surfaces are clean with clear sanitization logs, but minor lint/fiber particles are visible inside joint gaps of conveyor tracks.",
+                            partially_kh: "១) តុវេចខ្ចប់ស្អាតល្អ ប៉ុន្តែមានធូលីឬកំទេចក្រណាត់បន្តិចបន្តួចនៅតាមថ្នេរខ្សែពាន។",
                             not_cn: "1) 传送皮带底下常年积满灰尘黑泥，皮带表皮开裂起霉斑点，正对包装物。\n2) 包装工位夹缝有旧食物垃圾变霉长毛，严重污染包装小环境。",
                             not_en: "1) Thick mold/dirt under conveyors; belts show cracked surfaces with mold spots.\n2) Food/beverage debris found decaying inside drawers of packing tables.",
-                            not_kh: "១) មានធូលីនិងដីខ្មៅនៅក្រោមខ្សែពាន ខ្សែពានមានប្រេះនិងដុះផ្សិតខ្មៅប៉ះទំនិញ។\n២) មានសំណល់អាហាររលួយដុះផ្សិតនៅក្នុងថតតុវេចខ្ចប់ បង្កហានិភ័យខ្លាំង។"
+                            not_kh: "១) មានធូលីនិងដីខ្មៅនៅក្រោមខ្សែពាន ខ្សែពានមានប្រេះនិងដុះផ្សិតខ្មៅប៉ះទំនិញ។ \n២) មានសំណល់អាហាររលួយដុះផ្សិតនៅក្នុងថតតុវេចខ្ចប់ បង្កហានិភ័យខ្លាំង。"
                         },
                         { 
                             id: "3.11", 
@@ -707,10 +897,13 @@
                             comments: "",
                             fully_cn: "1) 装运码头上方装有超宽伸缩雨篷，雨天能完全覆盖集装箱尾门及装货间空隙。\n2) 地面做斜坡防积水设计，确保雨水快速流走不倒灌。",
                             fully_en: "1) Loading dock equipped with functional wide canopy covering the gap over container doors.\n2) Proper ground slope design prevents water accumulation/splash around loading bays.",
-                            fully_kh: "១) កន្លែងផ្ទេរទំនិញមានដំបូលការពារទឹកភ្លៀងធំទូលាយគ្របដណ្តប់ជិតទ្វារកុងតឺន័រ។\n២) ផ្ទៃដីមានចំណោតបង្ហូរទឹកបានលឿន ការពារការហូរច្រាលទឹកចូល។",
+                            fully_kh: "១) កន្លែងផ្ទេរទំនិញមានដំបូលការពារទឹកភ្លៀងធំទូលាយគ្របដណ្តប់ជិតទ្វារកុងតឺន័រ។ \n២) ផ្ទៃដីមានចំណោតបង្ហូរទឹកបានលឿន ការពារការហូរច្រាលទឹកចូល។",
+                            partially_cn: "1) 码头安装有实体雨篷，但在大风暴雨时，雨篷边缘可能无法彻底遮挡所有斜风溅水，雨天装车仍需塑料防雨布配合辅助。",
+                            partially_en: "1) Dock has a permanent canopy, but during stormy/sideways rain, wind-driven drops can splash near the entry. Plastic sheets are needed as temporary shields.",
+                            partially_kh: "១) មានដំបូលការពារ ប៉ុន្តែពេលខ្យល់កន្ត្រាក់ខ្លាំងអាចមានទឹកភ្លៀងជះចូលខ្លះ ត្រូវប្រើស្កុតថែម។",
                             not_cn: "1) 无任何雨篷防护，雨天装箱全靠雨伞和塑料布草草遮盖，纸箱极易淋湿。\n2) 地面积水严重，纸箱在装车前放在水泥地湿水吸潮。",
                             not_en: "1) Canopy is missing/torn; rain directly exposes cartons to moisture during container stuffing.\n2) Cartons set on wet puddles at loading bay before being loaded.",
-                            not_kh: "១) គ្មានដំបូល ឬដំបូលធ្លុះធ្លាយ ធ្វើឱ្យកាតុងត្រូវទឹកភ្លៀងពេលកំពុងផ្ទេរចូលកុងតឺន័រ។\n២) កាតុងត្រូវដាក់លើឥដ្ឋដែលមានដក់ទឹកសើមមុនពេលផ្ទេរឡើងឡាន។"
+                            not_kh: "១) គ្មានដំបូល ឬដំបូលធ្លុះធ្លាយ ធ្វើឱ្យកាតុងត្រូវទឹកភ្លៀងពេលកំពុងផ្ទេរចូលកុងតឺន័រ។ \n២) កាតុងត្រូវដាក់លើឥដ្ឋដែលមានដក់ទឹកសើមមុនពេលផ្ទេរឡើងឡាន。"
                         },
                         { 
                             id: "3.12", 
@@ -722,10 +915,13 @@
                             comments: "",
                             fully_cn: "1) 严格执行“七点检箱法”。人进箱内闭门，观察全箱壁无任何漏光亮点。\n2) 台风暴雨天气后检查确保箱顶无积水渗水，底板完好无裂隙。",
                             fully_en: "1) Strict '7-point inspection' enforced. Inspect from inside with doors shut to check light leakage.\n2) Roof/panels show no wet spots, rust cracks, or physical tears.",
-                            fully_kh: "១) អនុវត្តការត្រួតពិនិត្យ ៧ចំណុច។ ចូលទៅក្នុងកុងតឺន័រហើយបិទទ្វារមើល ដើម្បីរកមើលការលេចធ្លាយពន្លឺ។\n២) ដំបូលនិងជញ្ជាំងគ្មានស្នាមសើម ស្នាមច្រែះ ឬធ្លុះធ្លាយ។",
+                            fully_kh: "១) អនុវត្តការត្រួតពិនិត្យ ៧ចំណុច។ ចូលទៅក្នុងកុងតឺន័រហើយបិទទ្វារមើល ដើម្បីរកមើលការលេចធ្លាយពន្លឺ។ \n២) ដំបូលនិងជញ្ជាំងគ្មានស្នាមសើម ស្នាមច្រែះ ឬធ្លុះធ្លាយ។",
+                            partially_cn: "1) 执行了关门光密闭测试，全箱壁无洞穿漏光，但在柜内门铰缝隙处有极微弱反射光线（不影响防水性），胶圈依然紧密。",
+                            partially_en: "1) Inside check shows zero wall/roof holes, but extremely faint reflected light is seen near door hinge gaps (weatherproofing gaskets are still fully functional).",
+                            partially_kh: "១) ពិនិត្យឃើញគ្មានប្រហោងធ្លុះធ្លាយ ប៉ុន្តែមានពន្លឺជះតិចតួចនៅត្រង់កន្លែងគន្លឹះទ្វារ។",
                             not_cn: "1) 未做光密闭试验即直接塞箱，集装箱壁有明显破洞，运输中海水倒灌打湿鞋箱。\n2) 柜顶有细微裂纹缝隙，暴雨后顶层纸箱全部淋烂并长霉。",
                             not_en: "1) Container stuffed without inspection; small wall holes leak saltwater in during maritime transit.\n2) Hairline roof cracks cause rainwater seepage, ruining top-layer cartons during transit.",
-                            not_kh: "១) មិនបានពិនិត្យពន្លឺមុននឹងផ្ទេរទំនិញចូល ធ្វើឱ្យទឹកសមុទ្រចូលតាមប្រហោងពេលដឹកជញ្ជូន។\n២) មានប្រហោងតូចៗនៅដំបូល បណ្តាលឱ្យទឹកភ្លៀងលេចធ្លាយសើមប្រអប់កាតុងខាងលើ។"
+                            not_kh: "១) មិនបានពិនិត្យពន្លឺមុននឹងផ្ទេរទំនិញចូល ធ្វើឱ្យទឹកសមុទ្រចូលតាមប្រហោងពេលដឹកជញ្ជូន។ \n២) មានប្រហោងតូចៗនៅដំបូល បណ្តាលឱ្យទឹកភ្លៀងលេចធ្លាយសើមប្រអប់កាតុងខាងលើ。"
                         },
                         { 
                             id: "3.13", 
@@ -737,10 +933,13 @@
                             comments: "",
                             fully_cn: "1) 货柜箱门锁闭合顺畅、无变形卡死，门夹锁紧定位。\n2) 边缘黑色防雨橡胶密封圈圈条完整、无开裂或物理缺失，气密性佳。",
                             fully_en: "1) Container doors align and lock flush easily; door hardware undamaged.\n2) Black rubber gaskets around door perimeter are flexible, continuous, and uncracked.",
-                            fully_kh: "១) ទ្វារកុងតឺន័របិទចាក់សោបានល្អ គ្មានការវៀចវេរ ឬខូចខាត។\n២) ស្កុតកៅស៊ូខ្មៅជុំវិញទ្វារទន់ស្វិតល្អ គ្មានការដាច់រហែក ឬខូចខាតឡើយ។",
+                            fully_kh: "១) ទ្វារកុងតឺន័របិទចាក់សោបានល្អ គ្មានការវៀចវេរ ឬខូចខាត។ \n២) ស្កុតកៅស៊ូខ្មៅជុំវិញទ្វារទន់ស្វិតល្អ គ្មានការដាច់រហែក ឬខូចខាតឡើយ។",
+                            partially_cn: "1) 箱门气密锁闭，防雨橡胶密封圈圈条基本完整无开裂，但其中一侧局部胶条有微小的发硬变形磨损痕迹，并未断开缺失。",
+                            partially_en: "1) Gaskets are continuous and lock tight, but one side's black rubber is slightly hardened and showing surface wear, though no active breaks/tears exist.",
+                            partially_kh: "១) ស្កុតកៅស៊ូជុំវិញទ្វារនៅល្អ ប៉ុន្តែមានផ្នែកខ្លះរឹងស្រួយបន្តិចបន្តួចមិនទាន់បានប្តូរ។",
                             not_cn: "1) 集装箱密封胶条老化破烂、甚至局部断开，暴雨行车时雨水直接从门缝冲入柜内。\n2) 箱门铰链严重锈蚀变形，无法完全合拢关紧，留有极大漏水隐患。",
                             not_en: "1) Rubber seals worn-out, torn or missing in sections, allowing rain intrusion via door frame.\n2) Door hinges deformed, failing to close completely, leaving a noticeable gap.",
-                            not_kh: "១) ស្កុតកៅស៊ូចាស់ដាច់រហែក ធ្វើឱ្យទឹកភ្លៀងចូលតាមចន្លោះទ្វារពេលឡានកំពុងរត់។\n២) គន្លឹះទ្វារច្រែះនិងវៀច មិនអាចបិទជិតល្អ បន្សល់ទុកប្រហោងលេចទឹក។"
+                            not_kh: "១) ស្កុតកៅស៊ូចាស់ដាច់រហែក ធ្វើឱ្យទឹកភ្លៀងចូលតាមចន្លោះទ្វារពេលឡានកំពុងរត់។ \n២) គន្លឹះទ្វារច្រែះនិងវៀច មិនអាចបិទជិតល្អ បន្សល់ទុកប្រហោងលេចទឹក。"
                         },
                         { 
                             id: "3.14", 
@@ -752,10 +951,13 @@
                             comments: "",
                             fully_cn: "1) 对货柜木质地板前、中、后多点测试木材含水率。\n2) 地板含水率测试仪测量结果需低于25%（部分品牌严控19%），确保木底干燥不返潮。",
                             fully_en: "1) Wood floorboard moisture tested at front, middle, and rear sections.\n2) Moisture level strictly below 25% (or 19% depending on brand), dry to touch.",
-                            fully_kh: "១) វាស់សំណើមបាតឈើកុងតឺន័រនៅផ្នែកខាងមុខ កណ្តាល និងខាងក្រោយ។\n២) កម្រិតសំណើមក្រោម ២៥% (ឬ ១៩% តាមប្រេន) និងស្ងួតល្អពេលស្ទាបប៉ះ។",
+                            fully_kh: "១) វាស់សំណើមបាតឈើកុងតឺន័រនៅផ្នែកខាងមុខ កណ្តាល និងខាងក្រោយ។ \n២) កម្រិតសំណើមក្រោម ២៥% (ឬ ១៩% តាមប្រេន) និងស្ងួតល្អពេលស្ទាបប៉ះ។",
+                            partially_cn: "1) 货柜地板触摸完全干燥，前、中部含水率都在18%~21%之间，但在最深处尾板木条测得含水率在24%（临界边缘，低于25%限制），允许装运但需垫防护膜。",
+                            partially_en: "1) Floorboards are dry to touch, with most areas at 18-21% moisture, but a rear board strip measures 24% (near the 25% limit but acceptable; requires bottom lining).",
+                            partially_kh: "១) បាតឈើស្ងួតល្អ សំណើមភាគច្រើនចន្លោះ ១៨-២១% ប៉ុន្តែមានឈើមួយដុំនៅខាងក្រោយវាស់ឃើញ ២៤%។",
                             not_cn: "1) 刚水洗过的集装箱底板有大片深色湿斑，未干即装箱，底层货物受木板潮气发霉。\n2) 无测水仪器，或地板测水读数高达30%以上，仍强行装载出货。",
                             not_en: "1) Container washed recently with dark wet patches on wood floor; loaded immediately.\n2) Floor board moisture is >30%, resulting in evaporation and high moisture in cargo.",
-                            not_kh: "១) បាតឈើទើបលាងទឹកមានស្នាមសើមខ្មៅ តែនៅតែផ្ទុកទំនិញចូល ធ្វើឱ្យកាតុងក្រោមដុះផ្សិត។\n២) គ្មានឧបករណ៍វាស់ ឬវាស់ឃើញលើសពី ៣០% តែនៅតែបង្ខំផ្ទុកទំនិញចេញ។"
+                            not_kh: "១) បាតឈើទើបលាងទឹកមានស្នាមសើមខ្មៅ តែនៅតែផ្ទុកទំនិញចូល ធ្វើឱ្យកាតុងក្រោមដុះផ្សិត។ \n២) គ្មានឧបករណ៍វាស់ ឬវាស់ឃើញលើសពី ៣០% តែនៅតែបង្ខំផ្ទុកទំនិញចេញ。"
                         },
                         { 
                             id: "3.15", 
@@ -767,10 +969,13 @@
                             comments: "",
                             fully_cn: "1) 使用品牌指定的高吸收货柜干燥剂挂带，通常每柜根据尺寸悬挂 4 至 8 条。\n2) 悬挂在箱壁内凹凹槽内，不挤压纸箱，挂环牢固不脱落。",
                             fully_en: "1) Hang approved cargo desiccants/strips on the upper container rings (typically 4-8 poles).\n2) Placed in wall recesses to prevent squeezing cartons; hooks secured properly.",
-                            fully_kh: "១) ព្យួរកញ្ចប់ស្រូបសំណើមខ្នាតធំប្រេនកំណត់ (ជាទូទៅ ៤ ទៅ ៨ កញ្ចប់តាមទំហំ)។\n២) ដាក់តាមចន្លោះជ្រុងជញ្ជាំងកុងតឺន័រ មិនឱ្យញាត់ណែនកាតុង និងព្យួរបានមាំ។",
+                            fully_kh: "១) ព្យួរកញ្ចប់ស្រូបសំណើមខ្នាតធំប្រេនកំណត់ (ជាទូទៅ ៤ ទៅ ៨ កញ្ចប់តាមទំហំ)។ \n២) ដាក់តាមចន្លោះជ្រុងជញ្ជាំងកុងតឺន័រ មិនឱ្យញាត់ណែនកាតុង និងព្យួរបានមាំ។",
+                            partially_cn: "1) 配置并悬挂了规定数量的防潮干燥剂，但有两条在悬挂时环扣绑扎略低，导致干燥袋稍微碰压到最外侧的纸箱箱体。",
+                            partially_en: "1) Required quantity of desiccant strips are hung properly, but two strips are positioned slightly low, lightly touching the cargo boxes.",
+                            partially_kh: "១) ព្យួរកញ្ចប់ស្រូបសំណើមគ្រប់គ្រាន់ ប៉ុន្តែមាន ២កញ្ចប់ព្យួរទាបពេកប៉ះនឹងប្រអប់កាតុង។",
                             not_cn: "1) 完全未挂任何货柜防潮干燥剂，海运周期长温湿度波动大引发“货柜雨”造成大批货损。\n2) 敷衍应付，使用低劣、吸湿饱和漏液失效的袋装沙粒型干燥包，直接丢在箱底。",
                             not_en: "1) Zero container desiccants hung, causing severe moisture condensation during ocean transport.\n2) Used cheap silica bags tossed on floor; bags leaked corrosive fluid onto shoe boxes.",
-                            not_kh: "១) មិនបានព្យួរកញ្ចប់ស្រូបសំណើមទាល់តែសោះ បង្កជាបាតុភូតស្រក់ទឹកក្នុងកុងតឺន័រខ្ទេចទំនិញ។\n២) ប្រើកញ្ចប់ស្រូបសំណើមថោកៗក្រាលលើបាត ដែលងាយលេចធ្លាយជាតិគីមីខូចប្រអប់។"
+                            not_kh: "១) មិនបានព្យួរកញ្ចប់ស្រូបសំណើមទាល់តែសោះ បង្កជាបាតុភូតស្រក់ទឹកក្នុងកុងតឺន័រខ្ទេចទំនិញ។ \n២) ប្រើកញ្ចប់ស្រូបសំណើមថោកៗក្រាលលើបាត ដែលងាយលេចធ្លាយជាតិគីមីខូចប្រអប់。"
                         },
                         { 
                             id: "3.16", 
@@ -782,30 +987,37 @@
                             comments: "",
                             fully_cn: "1) 车间大门及每条生产线入口配备挂壁式自动红外免洗消毒洗手液。\n2) 班组长严格监管，上岗前和上厕所返回后必须对手部进行清洁除菌。",
                             fully_en: "1) Sanitizer dispensers installed at line entrances; auto-dispense preferred.\n2) Supervisors ensure compliance before shifts and upon return from restrooms.",
-                            fully_kh: "១) មានទឹកលាងដៃស្វ័យប្រវត្តិក្បែរច្រកចូល ឬនៅតាមខ្សែសង្វាក់ផលិតកម្ម។\n២) ប្រធានក្រុមត្រួតពិនិត្យយ៉ាងតឹងរ៉ឹងឱ្យលាងដៃមុនចូលធ្វើការ និងក្រោយពេលចេញពីបង្គន់។",
+                            fully_kh: "១) មានទឹកលាងដៃស្វ័យប្រវត្តិក្បែរច្រកចូល ឬនៅតាមខ្សែសង្វាក់ផលិតកម្ម。 \n២) ប្រធានក្រុមត្រួតពិនិត្យយ៉ាងតឹងរ៉ឹងឱ្យលាងដៃមុនចូលធ្វើការ និងក្រោយពេលចេញពីបង្គន់។",
+                            partially_cn: "1) 入口处配备了红外免洗洗手液设备，但其中一台电池电量较低导致喷液响应略缓慢，手部消毒能照常实施。",
+                            partially_en: "1) Dispensers are installed, but one unit's battery is low, making the sensor response slightly slow (sterilization is still performed).",
+                            partially_kh: "១) មានឧបករណ៍លាងដៃស្វ័យប្រវត្តិ ប៉ុន្តែមានមួយគ្រឿងអស់ថ្មខ្សោយ ធ្វើឱ្យសេនស័រយឺតបន្តិច។",
                             not_cn: "1) 车间门口除菌洗手液干涸多日无补充，沦为摆设。\n2) 员工手上有污渍、汗斑直接接触高档浅色真皮或帆布物料，极易引致出货后霉变。",
                             not_en: "1) Sanitizers are dry/empty with no refill stock available.\n2) Workers handle clean leather/canvas with sweat-soiled hands, seeding mold spores.",
-                            not_kh: "១) ឧបករណ៍លាងដៃទទេរគ្មានទឹកថ្នាំបំពេញជាច្រើនថ្ងៃ ទុកសម្រាប់តែបង្ហាញ។\n២) បុគ្គលិកប៉ះពាល់ស្បែកជើងក្រណាត់ឬស្បែកមានតម្លៃទាំងដៃកខ្វក់ បង្កជាផ្សិតនាពេលក្រោយ។"
+                            not_kh: "១) ឧបករណ៍លាងដៃទទេរគ្មានទឹកថ្នាំបំពេញជាច្រើនថ្ងៃ ទុកសម្រាប់តែបង្ហាញ។ \n២) បុគ្គលិកប៉ះពាល់ស្បែកជើងក្រណាត់ឬស្បែកមានតម្លៃទាំងដៃកខ្វក់ បង្កជាផ្សិតនាពេលក្រោយ。"
                         },
                         { 
                             id: "3.17", 
                             en: "Do QC and packers enforce a strict policy: any damp, dirty, smelly, or suspected moldy product is rejected from packing?", 
-                            cn: "质检和包装员是否执行一票否决：凡发现有任何受潮、脏污、散发异味或疑似霉斑的成品，严禁入盒包装？", 
+                            cn: "质检和包装员是否执行一票否绝：凡发现有任何受潮、脏污、散发异味或疑似霉斑的成品，严禁入盒包装？", 
                             kh: "តើ QC និងបុគ្គលិកវេចខ្ចប់អនុវត្តច្បាប់តឹងរ៉ឹង៖ រាល់ផលិតផលដែលសើម ប្រឡាក់ ធុំក្លិន ឬសង្ស័យថាមានផ្សិត ត្រូវបានបដិសេធមិនខ្ចប់?", 
                             status: 'P', 
                             photo: null, 
                             comments: "",
                             fully_cn: "1) 包装和终检人员掌握清晰的“零缺陷防霉控制红线”。\n2) 发现任何含水率超标、发潮、异味的在制品，立即扣留并贴红色返工标签退回前工序彻底纠正，绝不放行。",
                             fully_en: "1) Packing/QC staff operate on strict zero-tolerance policy against dampness/smell.\n2) Suspect materials isolated instantly, flagged red, and returned to drying buffer zone.",
-                            fully_kh: "១) បុគ្គលិក QC និងវេចខ្ចប់យល់ដឹងច្បាស់ពីវិធានការដាច់ខាត (Zero Tolerance)។\n២) រាល់ផលិតផលសង្ស័យ សើម ឬធុំក្លិន ត្រូវដកចេញភ្លាម វាយផ្លាកក្រហមបញ្ជូនទៅកម្តៅឡើងវិញ។",
+                            fully_kh: "១) បុគ្គលិក QC និងវេចខ្ចប់យល់ដឹងច្បាស់ពីវិធានការដាច់ខាត (Zero Tolerance)។ \n២) រាល់ផលិតផលសង្ស័យ សើម ឬធុំក្លិន ត្រូវដកចេញភ្លាម វាយផ្លាកក្រហមបញ្ជូនទៅកម្តៅឡើងវិញ។",
+                            partially_cn: "1) 质检员严格执行红线，但包装线对于微量发潮返工件的标识流程稍微有些滞后，未在隔离区醒目挂牌，但已物理隔离开。",
+                            partially_en: "1) Zero-tolerance red lines are enforced, but sorting tags for a few quarantined damp items were placed late, though items are physically isolated.",
+                            partially_kh: "១) QC អនុវត្តច្បាប់តឹងរ៉ឹង ប៉ុន្តែការវាយផ្លាកពណ៌ក្រហមលើទំនិញសើមនៅមានភាពយឺតយ៉ាវបន្តិចបន្តួច។",
                             not_cn: "1) 明知成品手感潮湿，甚至面料表面已有肉眼可见白色绒毛状、斑点状霉菌，因赶交期仍直接装包封箱。\n2) 对返工品没有追踪、直接混入大货出库，直接污染同箱健康产品。",
                             not_en: "1) Damp/musty items packed regardless to meet shipping quotas, causing bulk contamination.\n2) Defective stock returned without proper sorting, leaking wet units into export cartons.",
-                            not_kh: "១) ដឹងថាផលិតផលសើម ឬឃើញមានដុះផ្សិតសៗហើយ តែដោយសារប្រញាប់ចេញទំនិញក៏នៅតែខ្ចប់ចូលប្រអប់។\n២) ទំនិញ返工 គ្មានការតាមដានច្បាស់លាស់ យកមកលាយជាមួយទំនិញល្អ បង្កឱ្យរលួយដុះផ្សិតទាំងអស់។"
+                            not_kh: "១) ដឹងថាផលិតផលសើម ឬឃើញមានដុះផ្សិតសៗហើយ តែដោយសារប្រញាប់ចេញទំនិញក៏នៅតែខ្ចប់ចូលប្រអប់。 \n២) ទំនិញ返工 គ្មានការតាមដានច្បាស់លាស់ យកមកលាយជាមួយទំនិញល្អ បង្កឱ្យរលួយដុះផ្សិតទាំងអស់。"
                         }
                     ]
                 }
             ]
         };
+        /*END_AUDIT_DATA*/
 
         // Cache the total count of items in the whole audit
         let totalItemsCount = 0;
@@ -813,6 +1025,8 @@
 
         let activeSectionId = 'general';
         let mainChart, barChart;
+        let selectedEditorItemGlobal = null; // Currently selected item in the editor modal
+        let currentLanguage = 'tri'; // Default system-wide language view: tri (trilingual), cn, en, kh
 
         // Initializing UI
         function init() {
@@ -834,26 +1048,79 @@
             renderPrintLayout();
         }
 
-        // Render upper tab selectors (Requirement 6: Trilingual layout stacked)
+        // Toggle Expandable bottom admin panel
+        function toggleAdminPanel() {
+            const content = document.getElementById('admin-panel-content');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+            } else {
+                content.classList.add('hidden');
+            }
+        }
+
+        // Dynamic multi-language selector changes
+        function changeLanguage(val) {
+            currentLanguage = val;
+            
+            // Update Subtitle dynamically based on language choice
+            const subtitle = document.getElementById('system-subtitle');
+            if (val === 'cn') subtitle.innerText = "EVK数字化防霉稽核系统 | 中文标准库";
+            else if (val === 'en') subtitle.innerText = "EVK Mold Audit Tool | English Standard Library";
+            else if (val === 'kh') subtitle.innerText = "ប្រព័ន្ធវាយតម្លៃផ្សិតឌីជីថល EVK | ភាសាខ្មែរ";
+            else subtitle.innerText = "EVK数字防霉稽核系统 | EVK Anti-Mold Audit Standard (CN / EN / KH)";
+
+            // Re-render components with filtered language
+            renderTabs();
+            renderSection(activeSectionId);
+            updateCharts();
+            renderPrintLayout();
+
+            showToast(`已切换显示语言：${val === 'tri' ? '三语并置' : val === 'cn' ? '纯中文' : val === 'en' ? '纯英文' : '纯柬文'}`);
+        }
+
+        // Render upper tab selectors (Requirements 6: Trilingual layout stacked/Single lang based on selection)
         function renderTabs() {
             const nav = document.getElementById('tab-navigation');
             nav.innerHTML = auditData.sections.map(section => {
                 const failCount = section.items.filter(item => item.status === 'F').length;
+                const partialCount = section.items.filter(item => item.status === 'PR').length;
                 const totalWithPhotos = section.items.filter(item => item.photo !== null).length;
                 
-                const badgeHtml = failCount > 0 ? `<span class="ml-1 px-1.5 py-0.5 bg-red-500 text-[9px] text-white rounded-full font-bold">${failCount}❌</span>` : '';
+                let badgeHtml = '';
+                if (failCount > 0) {
+                    badgeHtml += `<span class="ml-1 px-1.5 py-0.5 bg-red-500 text-[9px] text-white rounded-full font-bold">${failCount}❌</span>`;
+                }
+                if (partialCount > 0) {
+                    badgeHtml += `<span class="ml-1 px-1.5 py-0.5 bg-amber-500 text-[9px] text-white rounded-full font-bold">${partialCount}🟡</span>`;
+                }
                 const photoBadgeHtml = totalWithPhotos > 0 ? `<span class="ml-1 px-1.5 py-0.5 bg-sky-500 text-[9px] text-white rounded-full font-bold">${totalWithPhotos}📷</span>` : '';
 
+                let tabTitleHtml = '';
+                if (currentLanguage === 'cn') {
+                    tabTitleHtml = `<span class="text-xs font-bold">${section.title_cn}</span>`;
+                } else if (currentLanguage === 'en') {
+                    tabTitleHtml = `<span class="text-xs font-bold">${section.title_en}</span>`;
+                } else if (currentLanguage === 'kh') {
+                    tabTitleHtml = `<span class="text-xs font-bold khmer-text">${section.title_kh}</span>`;
+                } else {
+                    tabTitleHtml = `
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs font-bold">${section.title_cn}</span>
+                            <span class="text-[9px] font-medium text-slate-400 block mt-0.5">${section.title_en} | ${section.title_kh}</span>
+                        </div>
+                    `;
+                }
+
+                const isActive = section.id === activeSectionId;
                 return `
                     <button onclick="switchSection('${section.id}')" 
                         id="tab-${section.id}"
-                        class="px-5 py-3 whitespace-nowrap rounded-2xl text-xs font-bold transition-all flex flex-col items-center justify-center min-w-[150px] shrink-0 ${section.id === activeSectionId ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">
-                        <div class="flex items-center gap-1">
-                            <span>${section.title_cn}</span>
+                        class="px-5 py-3.5 whitespace-nowrap rounded-2xl transition-all flex items-center justify-center min-w-[150px] shrink-0 ${isActive ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">
+                        <div class="flex items-center justify-center gap-1">
+                            ${tabTitleHtml}
                             ${badgeHtml}
                             ${photoBadgeHtml}
                         </div>
-                        <span class="text-[9px] font-medium text-slate-400 block mt-0.5">${section.title_en} | ${section.title_kh}</span>
                     </button>
                 `;
             }).join('');
@@ -885,26 +1152,103 @@
             const container = document.getElementById('audit-items-container');
             const intro = document.getElementById('section-intro');
 
+            if (!section) return;
+
+            // Handle Section Intro language splitting
+            const introLines = section.intro.split('\n');
+            const introCn = introLines[0] || '';
+            const introKh = introLines[1] || '';
+
+            let headerText = '';
+            let descText = '';
+
+            if (currentLanguage === 'cn') {
+                headerText = section.title_cn;
+                descText = introCn;
+            } else if (currentLanguage === 'en') {
+                headerText = section.title_en;
+                descText = introCn; // Fallback to CN
+            } else if (currentLanguage === 'kh') {
+                headerText = section.title_kh;
+                descText = introKh;
+            } else {
+                headerText = `${section.title_cn} | ${section.title_en}`;
+                descText = section.intro;
+            }
+
             intro.innerHTML = `
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
                     <div>
-                        <h3 class="font-extrabold text-blue-900 text-sm md:text-base">${section.title_cn} | ${section.title_en}</h3>
-                        <p class="text-[11px] md:text-xs text-blue-700 leading-relaxed mt-1 whitespace-pre-line">${section.intro}</p>
+                        <h3 class="font-extrabold text-blue-900 text-sm md:text-base">${headerText}</h3>
+                        <p class="text-[11px] md:text-xs text-blue-700 leading-relaxed mt-1 whitespace-pre-line">${descText}</p>
                     </div>
                     <div class="text-[10px] bg-blue-100/80 text-blue-800 py-1.5 px-3 rounded-lg font-bold flex flex-col items-center justify-center border border-blue-200 shrink-0 self-start md:self-auto">
                         <span>本区项目: ${section.items.length} 个</span>
-                        <span>បច្ចុប្បន្នភាព</span>
                     </div>
                 </div>
             `;
 
             container.innerHTML = section.items.map((item) => {
                 const isPass = item.status === 'P';
+                const isPartial = item.status === 'PR';
                 const isFail = item.status === 'F';
                 const isNA = item.status === 'NA';
 
+                // Language Specific Question text
+                let itemDescHtml = '';
+                if (currentLanguage === 'cn') {
+                    itemDescHtml = `<h4 class="text-slate-800 font-bold text-sm md:text-base leading-snug">${item.cn}</h4>`;
+                } else if (currentLanguage === 'en') {
+                    itemDescHtml = `<h4 class="text-slate-800 font-bold text-sm md:text-base leading-snug">${item.en}</h4>`;
+                } else if (currentLanguage === 'kh') {
+                    itemDescHtml = `<h4 class="text-slate-800 font-bold text-sm md:text-base leading-snug khmer-text font-medium">${item.kh}</h4>`;
+                } else {
+                    itemDescHtml = `
+                        <h4 class="text-slate-800 font-bold text-sm md:text-base leading-snug">${item.cn}</h4>
+                        <p class="text-slate-500 text-[11px] md:text-xs mt-1.5 italic">${item.en}</p>
+                        <p class="khmer-text mt-2 border-t border-slate-100 pt-2 font-medium">${item.kh}</p>
+                    `;
+                }
+
+                // Language specific Accordion content
+                const showCn = (currentLanguage === 'tri' || currentLanguage === 'cn');
+                const showEn = (currentLanguage === 'tri' || currentLanguage === 'en');
+                const showKh = (currentLanguage === 'tri' || currentLanguage === 'kh');
+
+                const criteriaHtml = `
+                    <div id="criteria-${section.id}-${item.id}" class="hidden mt-2 p-3 bg-slate-50 rounded-xl border border-slate-150 space-y-3">
+                        <!-- Fully Meet -->
+                        <div class="border-l-2 border-emerald-500 pl-2.5">
+                            <div class="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                                🟢 完全满足 / Fully Meet / សម្រេចបានទាំងស្រុង
+                            </div>
+                            ${showCn && item.fully_cn ? `<p class="text-[11px] text-slate-800 font-semibold mt-1 whitespace-pre-line">${item.fully_cn}</p>` : ''}
+                            ${showEn && item.fully_en ? `<p class="text-[10px] text-slate-500 italic mt-0.5 whitespace-pre-line">${item.fully_en}</p>` : ''}
+                            ${showKh && item.fully_kh ? `<p class="text-[11px] text-slate-600 font-medium mt-0.5 whitespace-pre-line">${item.fully_kh}</p>` : ''}
+                        </div>
+                        <!-- Partially Meet -->
+                        <div class="border-l-2 border-amber-500 pl-2.5">
+                            <div class="text-[10px] font-bold text-amber-700 flex items-center gap-1">
+                                🟡 部分满足 / Partially Meet / សម្រេចបានមួយផ្នែក
+                            </div>
+                            ${showCn && item.partially_cn ? `<p class="text-[11px] text-slate-800 font-semibold mt-1 whitespace-pre-line">${item.partially_cn}</p>` : ''}
+                            ${showEn && item.partially_en ? `<p class="text-[10px] text-slate-500 italic mt-0.5 whitespace-pre-line">${item.partially_en}</p>` : ''}
+                            ${showKh && item.partially_kh ? `<p class="text-[11px] text-slate-600 font-medium mt-0.5 whitespace-pre-line">${item.partially_kh}</p>` : ''}
+                        </div>
+                        <!-- Do Not Meet -->
+                        <div class="border-l-2 border-red-500 pl-2.5">
+                            <div class="text-[10px] font-bold text-red-700 flex items-center gap-1">
+                                🔴 不符合 / Do Not Meet / មិនអនុលោមភាព
+                            </div>
+                            ${showCn && item.not_cn ? `<p class="text-[11px] text-slate-800 font-semibold mt-1 whitespace-pre-line">${item.not_cn}</p>` : ''}
+                            ${showEn && item.not_en ? `<p class="text-[10px] text-slate-500 italic mt-0.5 whitespace-pre-line">${item.not_en}</p>` : ''}
+                            ${showKh && item.not_kh ? `<p class="text-[11px] text-slate-600 font-medium mt-0.5 whitespace-pre-line">${item.not_kh}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+
                 return `
-                    <div class="audit-card bg-white p-5 rounded-2xl border ${isFail ? 'border-red-300 bg-red-50/10' : 'border-slate-200'} flex flex-col justify-between">
+                    <div class="audit-card bg-white p-5 rounded-2xl border ${isFail ? 'border-red-300 bg-red-50/10' : isPartial ? 'border-amber-300 bg-amber-50/5' : 'border-slate-200'} flex flex-col justify-between">
                         
                         <!-- Header & Text info -->
                         <div>
@@ -913,9 +1257,7 @@
                                 ${item.photo ? '<span class="text-xs text-sky-600 font-bold flex items-center gap-1">📷 已拍照 Verified</span>' : ''}
                             </div>
                             
-                            <h4 class="text-slate-800 font-bold text-sm md:text-base leading-snug">${item.cn}</h4>
-                            <p class="text-slate-500 text-[11px] md:text-xs mt-1.5 italic">${item.en}</p>
-                            <p class="khmer-text mt-2 border-t border-slate-100 pt-2 font-medium">${item.kh}</p>
+                            ${itemDescHtml}
                         </div>
 
                         <!-- Requirement 1: Collapsible Fully Meet / Do Not Meet Trilingual Details -->
@@ -923,28 +1265,9 @@
                             <button onclick="toggleCriteria('criteria-${section.id}-${item.id}')" 
                                 class="text-[10px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 uppercase tracking-wider focus:outline-none">
                                 <span id="arrow-criteria-${section.id}-${item.id}">▶</span> 
-                                <span>判定标准 & 违规细节 / Criteria / លក្ខខណ្ឌវាយតម្លៃ</span>
+                                <span>判定标准 / Criteria / លក្ខខណ្ឌវាយតម្លៃ</span>
                             </button>
-                            <div id="criteria-${section.id}-${item.id}" class="hidden mt-2 p-3 bg-slate-50 rounded-xl border border-slate-150 space-y-3">
-                                <!-- Fully Meet -->
-                                <div class="border-l-2 border-emerald-500 pl-2.5">
-                                    <div class="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
-                                        🟢 完全满足 / Fully Meet / សម្រេចបានទាំងស្រុង
-                                    </div>
-                                    <p class="text-[11px] text-slate-800 font-semibold mt-1 whitespace-pre-line">${item.fully_cn}</p>
-                                    <p class="text-[10px] text-slate-500 italic mt-0.5 whitespace-pre-line">${item.fully_en}</p>
-                                    <p class="text-[11px] text-slate-600 font-medium mt-0.5 whitespace-pre-line">${item.fully_kh}</p>
-                                </div>
-                                <!-- Do Not Meet -->
-                                <div class="border-l-2 border-red-500 pl-2.5">
-                                    <div class="text-[10px] font-bold text-red-700 flex items-center gap-1">
-                                        🔴 不符合 / Do Not Meet / មិនអនុលោមភាព
-                                    </div>
-                                    <p class="text-[11px] text-slate-800 font-semibold mt-1 whitespace-pre-line">${item.not_cn}</p>
-                                    <p class="text-[10px] text-slate-500 italic mt-0.5 whitespace-pre-line">${item.not_en}</p>
-                                    <p class="text-[11px] text-slate-600 font-medium mt-0.5 whitespace-pre-line">${item.not_kh}</p>
-                                </div>
-                            </div>
+                            ${criteriaHtml}
                         </div>
 
                         <!-- Action Area (Buttons, Comment and Photo Camera Input) -->
@@ -955,7 +1278,7 @@
                                 <span class="text-[10px] text-slate-400 font-bold uppercase shrink-0">备注 Note:</span>
                                 <input type="text" 
                                     id="comment-input-${section.id}-${item.id}"
-                                    value="${item.comments}" 
+                                    value="${item.comments || ''}" 
                                     placeholder="输入备注或发现的异常状况..." 
                                     onchange="handleCommentChange('${section.id}', '${item.id}', this.value)"
                                     class="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition" />
@@ -964,7 +1287,7 @@
                             <!-- Camera Input Trigger and Image Display -->
                             <div class="flex flex-col space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase">现场证据 Photo Evidence:</span>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase">现场证据 Evidence:</span>
                                     
                                     <!-- Hidden Camera File Input -->
                                     <input type="file" 
@@ -978,7 +1301,7 @@
                                     <button onclick="document.getElementById('camera-file-${section.id}-${item.id}').click()" 
                                         class="flex items-center space-x-1 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-lg text-xs font-semibold transition">
                                         <span>📷</span>
-                                        <span>${item.photo ? '重新拍照 Retake' : '拍照 / 上传 Camera'}</span>
+                                        <span>${item.photo ? '重新拍照' : '拍照 / 上传'}</span>
                                     </button>
                                 </div>
 
@@ -1004,20 +1327,27 @@
                                 `}
                             </div>
 
-                            <!-- Interactive status choice buttons -->
+                            <!-- Interactive status choice buttons (Now with 4 states) -->
                             <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">状态 / ស្ថានភាព:</span>
-                                <div class="flex space-x-1.5">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">状态 Status:</span>
+                                <div class="flex space-x-1">
                                     <button onclick="setStatus('${section.id}', '${item.id}', 'P')" 
-                                        class="px-3.5 py-1.5 text-xs font-bold rounded-lg border transition ${isPass ? 'status-btn-active-p shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">
+                                        class="px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition ${isPass ? 'status-btn-active-p shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}"
+                                        title="1.0分">
                                         PASS
                                     </button>
+                                    <button onclick="setStatus('${section.id}', '${item.id}', 'PR')" 
+                                        class="px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition ${isPartial ? 'status-btn-active-pr shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}"
+                                        title="0.5分">
+                                        PARTIAL
+                                    </button>
                                     <button onclick="setStatus('${section.id}', '${item.id}', 'F')" 
-                                        class="px-3.5 py-1.5 text-xs font-bold rounded-lg border transition ${isFail ? 'status-btn-active-f shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">
+                                        class="px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition ${isFail ? 'status-btn-active-f shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}"
+                                        title="0分">
                                         FAIL
                                     </button>
                                     <button onclick="setStatus('${section.id}', '${item.id}', 'NA')" 
-                                        class="px-3.5 py-1.5 text-xs font-bold rounded-lg border transition ${isNA ? 'status-btn-active-na shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">
+                                        class="px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition ${isNA ? 'status-btn-active-na shadow-sm' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}">
                                         N/A
                                     </button>
                                 </div>
@@ -1029,7 +1359,7 @@
             }).join('');
         }
 
-        // Change audit state status P / F / NA
+        // Change audit state status P / PR / F / NA
         function setStatus(sectionId, itemId, status) {
             const section = auditData.sections.find(s => s.id === sectionId);
             const item = section.items.find(i => i.id === itemId);
@@ -1038,7 +1368,13 @@
             renderTabs();
             updateCharts();
             renderPrintLayout(); 
-            showToast(`已将 Item ${itemId} 修改为 ${status === 'P' ? '合格 PASS' : status === 'F' ? '不合格 FAIL' : '不适用 N/A'}`);
+            
+            let toastDesc = '合格 PASS';
+            if (status === 'PR') toastDesc = '部分合格 PARTIAL (0.5分)';
+            else if (status === 'F') toastDesc = '不合格 FAIL';
+            else if (status === 'NA') toastDesc = '不适用 N/A';
+
+            showToast(`已将 Item ${itemId} 修改为 ${toastDesc}`);
         }
 
         // Keep state comment up to date
@@ -1146,10 +1482,10 @@
             mainChart = new Chart(ctxMain, {
                 type: 'doughnut',
                 data: {
-                    labels: ['PASS (合格)', 'FAIL (不合格)', 'N/A (不适用)'],
+                    labels: ['PASS (合格)', 'PARTIALLY (部分合格)', 'FAIL (不合格)', 'N/A (不适用)'],
                     datasets: [{
-                        data: [0, 0, 0],
-                        backgroundColor: ['#10b981', '#ef4444', '#64748b'],
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#64748b'],
                         borderWidth: 2,
                         borderColor: '#ffffff',
                         hoverOffset: 6
@@ -1193,41 +1529,53 @@
             });
         }
 
-        // Live score calculations and stats updates (Percentage system)
+        // Live score calculations and stats updates (Weighted scoring system)
         function updateCharts() {
-            let totalP = 0, totalF = 0, totalNA = 0;
+            let totalP = 0, totalPR = 0, totalF = 0, totalNA = 0;
             const barPercentages = [];
+            const barLabels = [];
 
             auditData.sections.forEach(s => {
-                let sectionP = 0, sectionF = 0, sectionNA = 0;
+                let sectionP = 0, sectionPR = 0, sectionF = 0, sectionNA = 0;
                 s.items.forEach(item => {
                     if (item.status === 'P') { sectionP++; totalP++; }
+                    else if (item.status === 'PR') { sectionPR++; totalPR++; }
                     else if (item.status === 'F') { sectionF++; totalF++; }
                     else { sectionNA++; totalNA++; }
                 });
                 
                 const sectionEligible = s.items.length - sectionNA;
-                const sectionScorePercent = sectionEligible > 0 ? Math.round((sectionP / sectionEligible) * 100) : 0;
+                // Weighted section score (P = 1.0, PR = 0.5)
+                const sectionScore = (sectionP * 1.0) + (sectionPR * 0.5);
+                const sectionScorePercent = sectionEligible > 0 ? Math.round((sectionScore / sectionEligible) * 100) : 0;
                 barPercentages.push(sectionScorePercent);
+                
+                // Keep chart labels translated based on current language
+                let translatedTitle = s.title_cn;
+                if (currentLanguage === 'en') translatedTitle = s.title_en;
+                else if (currentLanguage === 'kh') translatedTitle = s.title_kh;
+                barLabels.push(translatedTitle);
             });
 
-            // Update main ring chart
-            mainChart.data.datasets[0].data = [totalP, totalF, totalNA];
+            // Update main ring chart [PASS, PARTIAL, FAIL, N/A]
+            mainChart.data.datasets[0].data = [totalP, totalPR, totalF, totalNA];
             mainChart.update();
 
-            // Requirement 4: Update bar chart comparisons in percentage
+            // Update bar chart comparisons in percentage
+            barChart.data.labels = barLabels;
             barChart.data.datasets[0].data = barPercentages;
             barChart.update();
 
-            // Requirement 3: Calculate and Update Score Dashboard in percentage
+            // Calculate and Update Score Dashboard in percentage (PASS=1, PARTIAL=0.5)
             const totalEligible = totalItemsCount - totalNA;
-            const finalScorePercentage = totalEligible > 0 ? ((totalP / totalEligible) * 100).toFixed(1) : "0.0";
+            const totalWeightedScore = (totalP * 1.0) + (totalPR * 0.5);
+            const finalScorePercentage = totalEligible > 0 ? ((totalWeightedScore / totalEligible) * 100).toFixed(1) : "0.0";
             
             document.getElementById('overall-score-display').innerText = `${finalScorePercentage}%`;
             document.getElementById('center-percent-text').innerText = `${finalScorePercentage}%`;
             
             // Set print stats
-            document.getElementById('print-score').innerText = `${finalScorePercentage}% (${totalP}/${totalEligible} PASS)`;
+            document.getElementById('print-score').innerText = `${finalScorePercentage}% (PASS:${totalP}, PARTIAL:${totalPR} / 可算项目:${totalEligible})`;
         }
 
         // Construct printable report with ALL items across ALL sections dynamically
@@ -1239,16 +1587,31 @@
                     let statusLabel = '';
                     let statusColor = '';
                     if (item.status === 'P') { statusLabel = 'PASS'; statusColor = 'text-green-600 font-bold'; }
+                    else if (item.status === 'PR') { statusLabel = 'PARTIAL'; statusColor = 'text-amber-500 font-bold'; }
                     else if (item.status === 'F') { statusLabel = 'FAIL'; statusColor = 'text-red-600 font-bold'; }
                     else { statusLabel = 'N/A'; statusColor = 'text-slate-500'; }
+
+                    // Formulate printing checkpoint texts cleanly
+                    let printContentHtml = '';
+                    if (currentLanguage === 'cn') {
+                        printContentHtml = `<div class="font-bold text-slate-800 text-xs">${item.cn}</div>`;
+                    } else if (currentLanguage === 'en') {
+                        printContentHtml = `<div class="font-bold text-slate-800 text-xs">${item.en}</div>`;
+                    } else if (currentLanguage === 'kh') {
+                        printContentHtml = `<div class="font-bold text-slate-800 text-xs khmer-text font-medium">${item.kh}</div>`;
+                    } else {
+                        printContentHtml = `
+                            <div class="font-bold text-slate-800 text-xs">${item.cn}</div>
+                            <div class="text-slate-600 text-[10px] mt-0.5 italic">${item.en}</div>
+                            <div class="text-slate-500 text-[10px] mt-0.5">${item.kh}</div>
+                        `;
+                    }
 
                     return `
                         <tr class="border-b border-slate-300">
                             <td class="p-2 text-center font-bold">${item.id}</td>
                             <td class="p-2">
-                                <div class="font-bold text-slate-800 text-xs">${item.cn}</div>
-                                <div class="text-slate-600 text-[10px] mt-0.5 italic">${item.en}</div>
-                                <div class="text-slate-500 text-[10px] mt-0.5">${item.kh}</div>
+                                ${printContentHtml}
                             </td>
                             <td class="p-2 text-center ${statusColor} text-xs font-extrabold">${statusLabel}</td>
                             <td class="p-2 text-[10px] text-slate-700">
@@ -1259,10 +1622,22 @@
                     `;
                 }).join('');
 
+                // Resolve header for printed section based on language filter
+                let printSecTitle = '';
+                if (currentLanguage === 'cn') {
+                    printSecTitle = sec.title_cn;
+                } else if (currentLanguage === 'en') {
+                    printSecTitle = sec.title_en;
+                } else if (currentLanguage === 'kh') {
+                    printSecTitle = sec.title_kh;
+                } else {
+                    printSecTitle = `${sec.title_cn} | ${sec.title_en} | ${sec.title_kh}`;
+                }
+
                 return `
                     <div class="print-page-break">
                         <h2 class="text-sm font-extrabold text-slate-950 mb-2 border-b border-slate-900 pb-1 uppercase">
-                            ${sec.title_cn} | ${sec.title_en} | ${sec.title_kh}
+                            ${printSecTitle}
                         </h2>
                         <table class="w-full text-left border-collapse border border-slate-300">
                             <thead>
@@ -1287,6 +1662,498 @@
             syncPrintDetails();
             renderPrintLayout();
             window.print();
+        }
+
+
+        // ==========================================
+        //  ✍️ WRITING / COPY TRANSLATION EDITOR CODE
+        // ==========================================
+
+        function openEditorModal() {
+            document.getElementById('editor-modal').classList.remove('hidden');
+            renderEditorItemsList();
+            // Automatically select first item
+            const firstSec = auditData.sections[0];
+            if (firstSec && firstSec.items[0]) {
+                selectEditorItem(firstSec.id, firstSec.items[0].id);
+            }
+        }
+
+        function closeEditorModal() {
+            document.getElementById('editor-modal').classList.add('hidden');
+        }
+
+        // Render left-side panel item selectors inside modal
+        function renderEditorItemsList() {
+            const listContainer = document.getElementById('editor-items-list');
+            const keyword = document.getElementById('editor-search').value.toLowerCase();
+
+            listContainer.innerHTML = auditData.sections.map(sec => {
+                // Filter items based on keyword
+                const filteredItems = sec.items.filter(item => {
+                    return item.id.includes(keyword) || 
+                           item.cn.toLowerCase().includes(keyword) || 
+                           item.en.toLowerCase().includes(keyword) || 
+                           item.kh.includes(keyword);
+                });
+
+                if (filteredItems.length === 0) return '';
+
+                const itemsHtml = filteredItems.map(item => {
+                    const isSelected = selectedEditorItemGlobal && 
+                                       selectedEditorItemGlobal.sectionId === sec.id && 
+                                       selectedEditorItemGlobal.itemId === item.id;
+                    return `
+                        <button onclick="selectEditorItem('${sec.id}', '${item.id}')"
+                            class="w-full text-left px-3 py-2 rounded-xl text-xs transition duration-150 flex flex-col gap-0.5 ${isSelected ? 'bg-amber-100 border-l-4 border-amber-500 font-bold text-slate-900' : 'hover:bg-slate-100 text-slate-600'}">
+                            <span class="text-[10px] font-bold text-slate-400">ITEM ${item.id}</span>
+                            <span class="truncate w-full block">${item.cn}</span>
+                        </button>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="mb-4">
+                        <div class="px-2 py-1 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase border-b border-slate-100 mb-1.5 flex justify-between">
+                            <span>${sec.title_cn}</span>
+                            <span>${filteredItems.length}项</span>
+                        </div>
+                        <div class="space-y-0.5">
+                            ${itemsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterEditorItems() {
+            renderEditorItemsList();
+        }
+
+        // Load targeted item translations into right panel form (Updated with Partial option)
+        function selectEditorItem(sectionId, itemId) {
+            selectedEditorItemGlobal = { sectionId, itemId };
+            
+            // Re-render sidebar to update selected style highlight
+            renderEditorItemsList();
+
+            const sec = auditData.sections.find(s => s.id === sectionId);
+            const item = sec ? sec.items.find(i => i.id === itemId) : null;
+            const pane = document.getElementById('editor-form-pane');
+
+            if (!item) {
+                pane.innerHTML = `<div class="text-center py-20 text-slate-400 text-xs">👈 请在左侧列表中选择一个项目开始编辑文案</div>`;
+                return;
+            }
+
+            pane.innerHTML = `
+                <!-- Selection Header -->
+                <div class="border-b border-slate-100 pb-3 mb-4 flex justify-between items-center bg-amber-50/50 p-3 rounded-2xl border border-amber-100">
+                    <div>
+                        <span class="bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">正在编辑 EDITING</span>
+                        <h3 class="text-sm font-bold text-slate-800 mt-1">${sec.title_cn} > 评估条目 Item ${item.id}</h3>
+                    </div>
+                    <span class="text-xs font-bold text-slate-400">NO. ${item.id}</span>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Checkpoint Titles (Trilingual) -->
+                    <div class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-150">
+                        <h4 class="text-xs font-extrabold text-slate-700 tracking-wide uppercase border-b border-slate-200 pb-1 flex items-center gap-1.5">
+                            📌 评估项目名称 / Checkpoint Description
+                        </h4>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">🇨🇳 评估项目中文:</label>
+                            <input type="text" value="${item.cn}" oninput="updateItemField('cn', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500" />
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">🇬🇧 评估项目英文 (English):</label>
+                            <textarea rows="2" oninput="updateItemField('en', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500">${item.en}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">🇰🇭 评估项目柬文 (ភាសាខ្មែរ):</label>
+                            <textarea rows="2" oninput="updateItemField('kh', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 khmer-text">${item.kh}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Fully Meet Criteria (Trilingual) -->
+                    <div class="space-y-3 bg-emerald-50/20 p-4 rounded-2xl border border-emerald-100">
+                        <h4 class="text-xs font-extrabold text-emerald-800 tracking-wide uppercase border-b border-emerald-100 pb-1 flex items-center gap-1.5">
+                            🟢 判定标准：完全满足 / Fully Meet Criteria (1.0分)
+                        </h4>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-emerald-700 mb-1">🇨🇳 完全满足中文细则:</label>
+                            <textarea rows="2" oninput="updateItemField('fully_cn', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 font-semibold">${item.fully_cn || ''}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-emerald-700 mb-1">🇬🇧 完全满足英文细则 (English):</label>
+                            <textarea rows="2" oninput="updateItemField('fully_en', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 italic">${item.fully_en || ''}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-emerald-700 mb-1">🇰🇭 完全满足柬文细则 (ភាសាខ្មែរ):</label>
+                            <textarea rows="2" oninput="updateItemField('fully_kh', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 khmer-text">${item.fully_kh || ''}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Partially Meet Criteria (Trilingual - Newly Added!) -->
+                    <div class="space-y-3 bg-amber-50/30 p-4 rounded-2xl border border-amber-200">
+                        <h4 class="text-xs font-extrabold text-amber-800 tracking-wide uppercase border-b border-amber-200 pb-1 flex items-center gap-1.5">
+                            🟡 判定标准：部分满足 / Partially Meet Criteria (0.5分)
+                        </h4>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-amber-700 mb-1">🇨🇳 部分满足中文细则:</label>
+                            <textarea rows="2" oninput="updateItemField('partially_cn', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 font-semibold">${item.partially_cn || ''}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-amber-700 mb-1">🇬🇧 部分满足英文细则 (English):</label>
+                            <textarea rows="2" oninput="updateItemField('partially_en', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 italic">${item.partially_en || ''}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-amber-700 mb-1">🇰🇭 部分满足柬文细则 (ភាសាខ្មែរ):</label>
+                            <textarea rows="2" oninput="updateItemField('partially_kh', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-amber-500 focus:border-amber-500 khmer-text">${item.partially_kh || ''}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Do Not Meet Criteria (Trilingual) -->
+                    <div class="space-y-3 bg-red-50/20 p-4 rounded-2xl border border-red-100">
+                        <h4 class="text-xs font-extrabold text-red-800 tracking-wide uppercase border-b border-red-100 pb-1 flex items-center gap-1.5">
+                            🔴 判定标准：不符合违规细节 / Do Not Meet Details (0分)
+                        </h4>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-red-700 mb-1">🇨🇳 不符合中文细则:</label>
+                            <textarea rows="2" oninput="updateItemField('not_cn', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-red-500 focus:border-red-500 font-semibold">${item.not_cn || ''}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-red-700 mb-1">🇬🇧 不符合英文细则 (English):</label>
+                            <textarea rows="2" oninput="updateItemField('not_en', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-red-500 focus:border-red-500 italic">${item.not_en || ''}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-red-700 mb-1">🇰🇭 不符合柬文细则 (ភាសាខ្មែរ):</label>
+                            <textarea rows="2" oninput="updateItemField('not_kh', this.value)" 
+                                class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-red-500 focus:border-red-500 khmer-text">${item.not_kh || ''}</textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Live update active data fields in memory and render background main UI
+        function updateItemField(field, value) {
+            if (!selectedEditorItemGlobal) return;
+            const { sectionId, itemId } = selectedEditorItemGlobal;
+            
+            const sec = auditData.sections.find(s => s.id === sectionId);
+            const item = sec.items.find(i => i.id === itemId);
+            item[field] = value;
+
+            // Re-render main interactive workspace screen instantly
+            renderSection(activeSectionId);
+            renderPrintLayout();
+        }
+
+        // Action: Copy raw JSON to Clipboard so users can paste directly inside local IDE/Text Editor
+        function copyRawJSON() {
+            const dataString = `const auditData = ${JSON.stringify(auditData, null, 12)};`;
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = dataString;
+            textarea.style.position = 'fixed'; // Avoid scrolling to bottom
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("📋 已复制！请在本地编辑器中替换 const auditData = {...} 块。");
+                } else {
+                    showToast("❌ 自动复制失败，请手动选择复制。", "⚠️");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("❌ 自动复制失败，请手动选择复制。", "⚠️");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // Action: Download entirely updated index.html featuring self-mutated Javascript definitions
+        async function downloadUpdatedHTML() {
+            try {
+                let sourceCode = "";
+                
+                // Attempt to fetch current HTML page code
+                try {
+                    const response = await fetch(window.location.href);
+                    sourceCode = await response.text();
+                } catch (e) {
+                    console.warn("Unable to fetch source via AJAX. Attempting fallback.", e);
+                }
+
+                // Fallback: If sandbox/iframe blocks self-fetching, we give user detailed instructions
+                if (!sourceCode || !sourceCode.includes('/*START_AUDIT_DATA*/')) {
+                    showFallbackCopyModal();
+                    return;
+                }
+
+                const startMarker = '/*START_AUDIT_DATA*/';
+                const endMarker = '/*END_AUDIT_DATA*/';
+                
+                let updatedCode = sourceCode;
+                if (sourceCode.includes(startMarker) && sourceCode.includes(endMarker)) {
+                    const startIndex = sourceCode.indexOf(startMarker) + startMarker.length;
+                    const endIndex = sourceCode.indexOf(endMarker);
+                    
+                    // Format correctly as human-readable JS formatting indent
+                    const newDataString = `\n        const auditData = ${JSON.stringify(auditData, null, 12)};\n        `;
+                    updatedCode = sourceCode.substring(0, startIndex) + newDataString + sourceCode.substring(endIndex);
+                } else {
+                    // Rough fallback regex if markers are stripped
+                    const regex = /const\s+auditData\s*=\s*\{[\s\S]*?\};(\s*\/\/\s*Cache)/;
+                    if (regex.test(sourceCode)) {
+                        const newDataString = `const auditData = ${JSON.stringify(auditData, null, 12)};\n        // Cache`;
+                        updatedCode = sourceCode.replace(regex, newDataString);
+                    }
+                }
+
+                // Construct binary stream and download
+                const blob = new Blob([updatedCode], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'index.html'; // Override existing
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("📥 成功生成并下载了更新后的 index.html 文件！");
+            } catch (err) {
+                console.error(err);
+                showFallbackCopyModal();
+            }
+        }
+
+        // Clean custom replacement notice modal if direct Blob downloading gets blocked by browser security sandbox policies
+        function showFallbackCopyModal() {
+            // Open a clear text area with the whole data block ready for copy
+            const pane = document.getElementById('editor-form-pane');
+            pane.innerHTML = `
+                <div class="bg-amber-50 border border-amber-200 p-5 rounded-2xl space-y-3">
+                    <h3 class="text-sm font-bold text-amber-800 flex items-center gap-1.5">
+                        ⚠️ 浏览器下载拦截提示 (Download Safe Guard)
+                    </h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        由于您当前运行在安全沙箱或预览环境中，浏览器禁止程序自动生成本地物理文件。
+                        请无需担心！您可以直接复制下方文本框内的完整配置数据代码，并在您的代码编辑器（如 VS Code）中<b>替换掉 index.html 文件中的 <code>const auditData = { ... }</code> 部分</b>即可：
+                    </p>
+                    
+                    <div class="pt-2">
+                        <button onclick="copyRawJSON()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                            📋 点击一键复制代码
+                        </button>
+                    </div>
+
+                    <textarea id="fallback-textarea" readonly rows="12" class="w-full text-[10px] font-mono p-3 bg-slate-900 text-slate-300 rounded-xl border border-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500 mt-2">${`const auditData = ` + JSON.stringify(auditData, null, 4) + `;`}</textarea>
+                </div>
+            `;
+            showToast("📥 无法自动下载，已转为复制模式", "⚠️");
+        }
+
+
+        // ==========================================
+        //  📊 EXCEL IMPORT AND EXPORT ENGINE CODE
+        // ==========================================
+
+        /**
+         * Converts current in-memory auditData structure into a flattened JSON row format
+         * and exports beautiful formatted Excel workbook down to client's filesystem.
+         */
+        function exportToExcel() {
+            const rows = [];
+            
+            // Loop through sections and map out columns
+            auditData.sections.forEach(sec => {
+                sec.items.forEach(item => {
+                    rows.push({
+                        "Section ID (标识-不可修改)": sec.id,
+                        "Section Title CN (分类中文)": sec.title_cn,
+                        "Section Title EN (分类英文)": sec.title_en,
+                        "Section Title KH (分类柬文)": sec.title_kh,
+                        "Section Intro (分类导言介绍)": sec.intro,
+                        "Item ID (项目编号-不可修改)": item.id,
+                        "Item CN (项目中文描述)": item.cn,
+                        "Item EN (项目英文描述)": item.en,
+                        "Item KH (项目柬文描述)": item.kh,
+                        "Fully Meet CN (合格判定-中文)": item.fully_cn,
+                        "Fully Meet EN (合格判定-英文)": item.fully_en,
+                        "Fully Meet KH (合格判定-柬文)": item.fully_kh,
+                        "Partially Meet CN (部分合格-中文)": item.partially_cn,
+                        "Partially Meet EN (部分合格-英文)": item.partially_en,
+                        "Partially Meet KH (部分合格-柬文)": item.partially_kh,
+                        "Not Meet CN (不符合违规-中文)": item.not_cn,
+                        "Not Meet EN (不符合违规-英文)": item.not_en,
+                        "Not Meet KH (不符合违规-柬文)": item.not_kh
+                    });
+                });
+            });
+
+            // Parse json to worksheet
+            const worksheet = XLSX.utils.json_to_sheet(rows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "EVK防霉标准标准库");
+
+            // Formulate widths beautifully by inspecting string length
+            const max_widths = [];
+            rows.forEach(row => {
+                Object.keys(row).forEach((key, colIndex) => {
+                    const value = String(row[key] || '');
+                    const keyLen = key.replace(/[^\x00-\xff]/g, "xx").length; // count double byte chinese
+                    const valLen = value.replace(/[^\x00-\xff]/g, "xx").length;
+                    const maxLen = Math.max(keyLen, valLen);
+                    // Constraint column widths logically
+                    max_widths[colIndex] = Math.max(max_widths[colIndex] || 12, Math.min(maxLen, 50));
+                });
+            });
+            worksheet['!cols'] = max_widths.map(w => ({ wch: w }));
+
+            // Trigger immediate native browser download
+            XLSX.writeFile(workbook, "EVK_Mold_Audit_Template.xlsx");
+            showToast("📥 Excel 数据模板已成功导出！");
+        }
+
+        /**
+         * Reads file picker upload and parses rows back to structured schema,
+         * keeping active checklist progress intact if matching item is found in memory.
+         */
+        function importFromExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (!jsonData || jsonData.length === 0) {
+                        throw new Error("Excel 工作表中未检测到任何数据记录！");
+                    }
+
+                    // Format checking
+                    const sampleRow = jsonData[0];
+                    const requiredCols = ["Section ID (标识-不可修改)", "Item ID (项目编号-不可修改)", "Item CN (项目中文描述)"];
+                    const missingCols = requiredCols.filter(col => !(col in sampleRow));
+
+                    if (missingCols.length > 0) {
+                        throw new Error("Excel格式与模板不匹配，缺少关键列：" + missingCols.join(", "));
+                    }
+
+                    // Parse flat table array back into structured sections
+                    const parsedSectionsMap = {};
+                    
+                    jsonData.forEach(row => {
+                        const secId = String(row["Section ID (标识-不可修改)"] || '').trim();
+                        const itemId = String(row["Item ID (项目编号-不可修改)"] || '').trim();
+
+                        if (!secId || !itemId) return; // Skip faulty rows
+
+                        // Initialize section if not exists
+                        if (!parsedSectionsMap[secId]) {
+                            parsedSectionsMap[secId] = {
+                                id: secId,
+                                title_cn: String(row["Section Title CN (分类中文)"] || '').trim(),
+                                title_en: String(row["Section Title EN (分类英文)"] || '').trim(),
+                                title_kh: String(row["Section Title KH (分类柬文)"] || '').trim(),
+                                intro: String(row["Section Intro (分类导言介绍)"] || ''),
+                                items: []
+                            };
+                        }
+
+                        // Preserve progress/checks state if same ID was already evaluated!
+                        const existingSec = auditData.sections.find(s => s.id === secId);
+                        const existingItem = existingSec ? existingSec.items.find(i => i.id === itemId) : null;
+
+                        parsedSectionsMap[secId].items.push({
+                            id: itemId,
+                            cn: String(row["Item CN (项目中文描述)"] || '').trim(),
+                            en: String(row["Item EN (项目英文描述)"] || '').trim(),
+                            kh: String(row["Item KH (项目柬文描述)"] || '').trim(),
+                            status: existingItem ? existingItem.status : 'P',
+                            photo: existingItem ? existingItem.photo : null,
+                            comments: existingItem ? existingItem.comments : "",
+                            fully_cn: String(row["Fully Meet CN (合格判定-中文)"] || ''),
+                            fully_en: String(row["Fully Meet EN (合格判定-英文)"] || ''),
+                            fully_kh: String(row["Fully Meet KH (合格判定-柬文)"] || ''),
+                            partially_cn: String(row["Partially Meet CN (部分合格-中文)"] || ''),
+                            partially_en: String(row["Partially Meet EN (部分合格-英文)"] || ''),
+                            partially_kh: String(row["Partially Meet KH (部分合格-柬文)"] || ''),
+                            not_cn: String(row["Not Meet CN (不符合违规-中文)"] || ''),
+                            not_en: String(row["Not Meet EN (不符合违规-英文)"] || ''),
+                            not_kh: String(row["Not Meet KH (不符合违规-柬文)"] || '')
+                        });
+                    });
+
+                    // Build array and update state
+                    const finalSectionsList = Object.values(parsedSectionsMap);
+                    if (finalSectionsList.length === 0) {
+                        throw new Error("未成功解析到任何有效的防霉大类与检查项目！");
+                    }
+
+                    // Overwrite in-memory dataset
+                    auditData.sections = finalSectionsList;
+                    
+                    // Recalculate caching metrics
+                    totalItemsCount = 0;
+                    auditData.sections.forEach(s => totalItemsCount += s.items.length);
+                    activeSectionId = auditData.sections[0].id;
+
+                    // Re-render UI elements immediately
+                    renderTabs();
+                    renderSection(activeSectionId);
+                    updateCharts();
+                    renderPrintLayout();
+
+                    showToast(`📤 成功！导入并同步了 ${jsonData.length} 个防霉稽核项，涵盖 ${finalSectionsList.length} 个区域。`);
+
+                    // Sync visual editor list too if currently open
+                    if (!document.getElementById('editor-modal').classList.contains('hidden')) {
+                        renderEditorItemsList();
+                        const firstItem = auditData.sections[0].items[0];
+                        if (firstItem) selectEditorItem(activeSectionId, firstItem.id);
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    alert("⚠️ 导入解析失败: " + err.message + "\n\n请确保上传的是从本系统导出的 Excel 文件。");
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         window.onload = init;
